@@ -1,72 +1,21 @@
 ---
 
-# #19984: Automatische Aktualisierung fuer Ubuntu Rechner: cron-apt kann genutzt werden
-- name: Add apt proxy for intranet hosts
-  lineinfile:
-    dest=/etc/apt/apt.conf.d/70debconf
-    regexp='Acquire::http::Proxy '
-    line='Acquire::http::Proxy "http://px01.monheim.intern:3128";'
-  # This leads to 'ansible_default_ipv4' is undefined - don't know why
-  #when: ansible_default_ipv4.network == "10.1.10.0"
-  when: ansible_hostname in [ "schildweb", "intranet01" ]
+# Either use "static: no" or use variables in the include file, otherwise the include will always be used (statically included)
+#- name: "Including Debian 7 (Wheezy)"
+#  include: "Debian_7.yml"
+#  static: no
+#  when: (ansible_distribution == "Debian" and ansible_distribution_major_version == "7")
 
-- name: Ensure basic packages
-  apt:
-    pkg: ['cron-apt', 'etckeeper', 'git', 'ntp', 'sudo', 'vim', 'zsh']
-    state: present
-  tags: apt
+# We use ansible_lsb.id instead of ansible_distribution as this adds support for 
+# UCS (Univention Corporate Server) which reports ansible_distribution=Debian and
+# ansible_lsb.id=Univention
 
-- name: Configure cron-apt
-  lineinfile:
-    dest=/etc/cron-apt/action.d/3-download
-    regexp='Show-Upgraded=true'
-    line='dist-upgrade -y -o APT::Get::Show-Upgraded=true'
-  when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int == 7)
+- include_tasks: "{{ ansible_system }}-{{ ansible_lsb.id }}.yml"
+  when: ansible_lsb is defined and ansible_lsb.id is defined
 
-- name: Configure cron-apt
-  lineinfile:
-    dest=/etc/cron-apt/action.d/3-download
-    regexp='Show-Upgraded=true'
-    line='upgrade -y --with-new-pkgs -o APT::Get::Show-Upgraded=true'
-  when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int > 7)
+# Used by opdns1 (Debian 9 without lsb_release)
+- include_tasks: "{{ ansible_system }}-{{ ansible_distribution }}.yml"
+  when: ansible_lsb is not defined or ansible_lsb.id is not defined
 
-- name: Configure ntp
-  template: src={{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}-ntp.conf dest=/etc/ntp.conf
-
-- name: "sudoers: mit-defaults"
-  copy: >
-    src=sudoers.d-local-mit-dedicated
-    dest=/etc/sudoers.d/local-mit-dedicated
-    mode=0440
-    validate='visudo -cf %s'
-
-# sudo update-alternatives --set editor /usr/bin/vim.basic
-- name: "Use vim as default editor"
-  alternatives: name=editor path=/usr/bin/vim.basic
-  become: yes
-
-- stat: path=/etc/aliases
-  register: etc_aliases
-
-- name: "Set mail alias for root -> root@monheim.de"
-  lineinfile: >
-    dest=/etc/aliases
-    create=no
-    regexp="^root:"
-    line="root: root@monheim.de"
-  notify: newaliases
-  when: etc_aliases.stat.exists
-  tags: mail
-
-- name: "Create ~meissner/.forward"
-  copy: dest=/home/{{ ssh_user|default('meissner') }}/.forward content=root@meissner.IT force=no
-  tags: mail
-
-- name: "Install /etc/cron.daily/local-mit-disk-info"
-  copy: src=local-mit-disk-info dest=/etc/cron.daily/local-mit-disk-info mode=0755
-
-#19885: Kernel 3.16.0-8 führt unter VMware zu Fehlern
-- name: "Ensure linux-image-amd64 is unhold for Debian > 8 (#19885)"
-  dpkg_selections: name=linux-image-amd64 selection=install
-  when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int > 8)
+- include_tasks: "{{ ansible_system }}.yml"
 

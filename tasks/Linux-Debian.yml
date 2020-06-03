@@ -1,0 +1,75 @@
+---
+# common tasks for all Debian and Ubuntu machines
+
+# #19984: Automatische Aktualisierung fuer Ubuntu Rechner: cron-apt kann genutzt werden
+- name: Ensure basic packages
+  apt:
+    pkg:
+    - cron-apt
+    - etckeeper
+    - git
+    - lsb-release
+    - patch
+    - python
+    - sudo
+    - vim
+    - zsh
+  tags: apt
+
+- name: Configure cron-apt (Debian 7)
+  lineinfile:
+    dest=/etc/cron-apt/action.d/3-download
+    regexp='Show-Upgraded=true'
+    line='dist-upgrade -y -o APT::Get::Show-Upgraded=true'
+  when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int == 7)
+
+- name: Configure cron-apt
+  lineinfile:
+    dest=/etc/cron-apt/action.d/3-download
+    regexp='Show-Upgraded=true'
+    line='upgrade -y --with-new-pkgs -o APT::Get::Show-Upgraded=true'
+  when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int > 7)
+
+- name: "sudoers: mit-defaults"
+  copy: >
+    src=sudoers.d-local-mit-dedicated
+    dest=/etc/sudoers.d/local-mit-dedicated
+    mode=0440
+    validate='visudo -cf %s'
+
+# sudo update-alternatives --set editor /usr/bin/vim.basic
+- name: "Use vim as default editor"
+  alternatives: name=editor path=/usr/bin/vim.basic
+  become: yes
+
+- name: "Create ~meissner/.forward"
+  copy: dest=/home/{{ ssh_user|default('meissner') }}/.forward content=root@meissner.IT force=no
+  tags: mail
+
+- stat: path=/etc/aliases
+  register: etc_aliases
+
+- name: "Set mail alias for root -> {{ alias_root }}"
+  lineinfile:
+    dest: /etc/aliases
+    create: no
+    regexp: "^root:"
+    line: "root: {{ alias_root }}"
+  notify: newaliases
+  when: etc_aliases.stat.exists
+  tags: mail
+
+- name: "Install /etc/cron.daily/local-mit-disk-info"
+  copy: src=local-mit-disk-info dest=/etc/cron.daily/local-mit-disk-info mode=0755
+
+#20481: ca-certificates: Remove expired mozilla/AddTrust_External_Root.crt
+- name: Remove expired mozilla/AddTrust_External_Root.crt
+  lineinfile:
+    dest: /etc/ca-certificates.conf
+    create: no
+    regexp: "mozilla/AddTrust_External_Root.crt"
+    line:   "!mozilla/AddTrust_External_Root.crt"
+  notify: update-ca-certificates
+# Needed on Debian 8, 9 and 10
+#  when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int == 9)
+

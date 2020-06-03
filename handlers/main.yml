@@ -1,0 +1,6 @@
+---
+# Handlers
+
+- name: update-ca-certificates
+  command: /usr/sbin/update-ca-certificates
+

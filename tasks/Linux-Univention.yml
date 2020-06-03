@@ -1,0 +1,41 @@
+---
+# common tasks for all UCS machines
+
+- name: Install default packages
+  # The default mailer should be nullmailer, see https://s2.meissner.it/it/projects/mit-doc/wiki/E-Mail_Server
+  apt:
+    pkg:
+    - git
+    - patch
+    - python
+    - sudo
+    - vim
+  tags: apt
+
+- name: "logrotate: Enable compress and dateext (1/2)"
+  patch: src=logrotate.conf.patch dest=/etc/univention/templates/files/etc/logrotate.conf
+  register: logrotatepatch
+
+- name: "logrotate: Enable compress and dateext (2/2)"
+  command: ucr commit /etc/logrotate.conf
+  when: logrotatepatch.changed
+
+- name: Check postfix relayhost
+  become: no
+  command: grep "relayhost = {{ smtp_relayhost }}" /etc/postfix/main.cf
+  changed_when: no
+  register: relayhostset
+  failed_when: no
+  when: smtp_relayhost is defined
+
+- name: Set postfix relayhost (Univention)
+  command: 'ucr set mail/relayhost="{{ smtp_relayhost }}"'
+  when: smtp_relayhost is defined and relayhostset.rc == 1
+
+- name: "sudoers: mit-defaults-ucs"
+  copy:
+    src: sudoers.d-local-mit-dedicated-ucs
+    dest: /etc/sudoers.d/local-mit-dedicated-ucs
+    mode: 0440
+    validate: 'visudo -cf %s'
+
