@@ -62,14 +62,15 @@
 - name: "Install /etc/cron.daily/local-mit-disk-info"
   copy: src=local-mit-disk-info dest=/etc/cron.daily/local-mit-disk-info mode=0755
 
-#20481: ca-certificates: Remove expired mozilla/AddTrust_External_Root.crt
-- name: Remove expired mozilla/AddTrust_External_Root.crt
-  lineinfile:
-    dest: /etc/ca-certificates.conf
-    create: no
-    regexp: "mozilla/AddTrust_External_Root.crt"
-    line:   "!mozilla/AddTrust_External_Root.crt"
-  notify: update-ca-certificates
-# Needed on Debian 8, 9 and 10
-#  when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int == 9)
+# 2020-06-05: No longer needed, see #20483
+##20481: ca-certificates: Remove expired mozilla/AddTrust_External_Root.crt
+#- name: Remove expired mozilla/AddTrust_External_Root.crt
+#  lineinfile:
+#    dest: /etc/ca-certificates.conf
+#    create: no
+#    regexp: "mozilla/AddTrust_External_Root.crt"
+#    line:   "!mozilla/AddTrust_External_Root.crt"
+#  notify: update-ca-certificates
+## Needed on Debian 8, 9 and 10
+##  when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int == 9)
 
