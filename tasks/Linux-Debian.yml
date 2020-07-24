@@ -62,15 +62,20 @@
 - name: "Install /etc/cron.daily/local-mit-disk-info"
   copy: src=local-mit-disk-info dest=/etc/cron.daily/local-mit-disk-info mode=0755
 
-# 2020-06-05: No longer needed, see #20483
-##20481: ca-certificates: Remove expired mozilla/AddTrust_External_Root.crt
-#- name: Remove expired mozilla/AddTrust_External_Root.crt
-#  lineinfile:
-#    dest: /etc/ca-certificates.conf
-#    create: no
-#    regexp: "mozilla/AddTrust_External_Root.crt"
-#    line:   "!mozilla/AddTrust_External_Root.crt"
-#  notify: update-ca-certificates
-## Needed on Debian 8, 9 and 10
-##  when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int == 9)
+# 2019-03-26: All external sources should now be in /etc/apt/sources.list.d/
+#     in order to provide a single /etc/apt/sources.list for all machines.
+- name: Ensure we use a mit.debian version of /etc/apt/sources.list
+  command: grep -q "mit\.debian" /etc/apt/sources.list
+  changed_when: no
+  failed_when: no
+  register: mitdebian
+- fail:
+    msg: "Please add mit.debian to /etc/apt/sources.list in order to allow overwriting this file"
+  when: mitdebian.rc != 0
+
+- name: "Copy default /etc/apt/sources.list"
+  become: yes
+  copy:
+    src: sources.list-Linux-Debian_{{ ansible_lsb.major_release }}
+    dest: /etc/apt/sources.list
 
