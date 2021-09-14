@@ -10,6 +10,7 @@ deb http://security.debian.org/ stretch/updates main
 # deb-src http://security.debian.org/ stretch/updates main contrib non-free
 
 # stretch-updates, previously known as 'volatile'
-deb http://ftp.de.debian.org/debian/ stretch-updates main
+# 2021-09-14: Disabled as Stretch is now LTS
+# deb http://ftp.de.debian.org/debian/ stretch-updates main
 # deb-src http://ftp.de.debian.org/debian/ stretch-updates main
 
