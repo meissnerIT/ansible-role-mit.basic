@@ -42,10 +42,6 @@
   alternatives: name=editor path=/usr/bin/vim.basic
   become: yes
 
-- name: "Create ~meissner/.forward"
-  copy: dest=/home/{{ ssh_user|default('meissner') }}/.forward content=root@meissner.IT force=no
-  tags: mail
-
 - stat: path=/etc/aliases
   register: etc_aliases
 

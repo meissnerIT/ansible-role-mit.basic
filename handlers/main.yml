@@ -1,6 +1,9 @@
 ---
 # Handlers
 
+- name: newaliases
+  command: /usr/bin/newaliases
+
 - name: update-ca-certificates
   command: /usr/sbin/update-ca-certificates
 
