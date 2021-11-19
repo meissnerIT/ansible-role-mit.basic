@@ -72,6 +72,6 @@
 - name: "Copy default /etc/apt/sources.list"
   become: yes
   copy:
-    src: sources.list-Linux-Debian_{{ ansible_lsb.major_release }}
+    src: sources.list-Linux-Debian_{{ ansible_distribution_major_version }}
     dest: /etc/apt/sources.list
 
