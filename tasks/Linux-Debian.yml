@@ -29,6 +29,8 @@
     regexp='Show-Upgraded=true'
     line='upgrade -y --with-new-pkgs -o APT::Get::Show-Upgraded=true'
   when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int > 7)
+        or (ansible_distribution == "Ubuntu" and ansible_distribution_major_version|int > 18)
+    # Raspbian reports "Debian" as ansible_distribution
 
 - name: "sudoers: mit-defaults"
   copy: >
@@ -65,13 +67,16 @@
   changed_when: no
   failed_when: no
   register: mitdebian
+  when: ansible_distribution == "Debian"
+
 - fail:
     msg: "Please add mit.debian to /etc/apt/sources.list in order to allow overwriting this file"
-  when: mitdebian.rc != 0
+  when: (ansible_distribution == "Debian" and mitdebian.rc != 0)
 
 - name: "Copy default /etc/apt/sources.list"
   become: yes
   copy:
     src: sources.list-Linux-Debian_{{ ansible_distribution_major_version }}
     dest: /etc/apt/sources.list
+  when: ansible_distribution == "Debian"
 
