@@ -79,4 +79,5 @@
     src: sources.list-Linux-Debian_{{ ansible_distribution_major_version }}
     dest: /etc/apt/sources.list
   when: ansible_distribution == "Debian"
+  notify: Update apt cache
 
