@@ -76,7 +76,8 @@
 - name: "Copy default /etc/apt/sources.list"
   become: yes
   copy:
-    src: sources.list-Linux-Debian_{{ ansible_distribution_major_version }}
+    # We use this playbook for ansible_lsb.id=(Debian|Raspbian)
+    src: sources.list-Linux-{{ ansible_lsb.id }}_{{ ansible_distribution_major_version }}
     dest: /etc/apt/sources.list
   when: ansible_distribution == "Debian"
   notify: Update apt cache
