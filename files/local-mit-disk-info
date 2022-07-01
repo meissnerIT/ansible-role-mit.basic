@@ -1,14 +1,16 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # Distributed via ansible - mit.dedicated
 
 [ -d /.mit-disk-info ] || mkdir /.mit-disk-info
 
+if [ -f /sbin/fdisk ]; then
+    FDISK=fdisk
+else
+    FDISK=gdisk
+fi
+
 for disk in $(find /dev/ \( -name "sd?" -o -name "vd?" \) -printf '%f\n'); do
-    if [ -f /sbin/fdisk ]; then
-        fdisk -l /dev/${disk} > /.mit-disk-info/${disk}.fdisk
-    else
-        gdisk -l /dev/${disk} > /.mit-disk-info/${disk}.gdisk
-    fi
+    ${FDISK} -l /dev/${disk} > /.mit-disk-info/${disk}.${FDISK}
 done
 
