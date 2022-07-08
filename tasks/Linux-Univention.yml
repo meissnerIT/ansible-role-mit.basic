@@ -12,14 +12,6 @@
     - vim
   tags: apt
 
-- name: "logrotate: Enable compress and dateext (1/2)"
-  patch: src=logrotate.conf.patch dest=/etc/univention/templates/files/etc/logrotate.conf
-  register: logrotatepatch
-
-- name: "logrotate: Enable compress and dateext (2/2)"
-  command: ucr commit /etc/logrotate.conf
-  when: logrotatepatch.changed
-
 - name: Check postfix relayhost
   become: no
   command: grep "relayhost = {{ smtp_relayhost }}" /etc/postfix/main.cf

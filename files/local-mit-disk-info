@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Distributed via ansible - mit.dedicated
+# Distributed via ansible - mit.basic
 
 [ -d /.mit-disk-info ] || mkdir /.mit-disk-info
 
