@@ -62,17 +62,6 @@
 
 # 2019-03-26: All external sources should now be in /etc/apt/sources.list.d/
 #     in order to provide a single /etc/apt/sources.list for all machines.
-- name: Ensure we use a mit.debian version of /etc/apt/sources.list
-  command: grep -q "mit\.debian" /etc/apt/sources.list
-  changed_when: no
-  failed_when: no
-  register: mitdebian
-  when: ansible_distribution == "Debian"
-
-- fail:
-    msg: "Please add mit.debian to /etc/apt/sources.list in order to allow overwriting this file"
-  when: (ansible_distribution == "Debian" and mitdebian.rc != 0)
-
 - name: "Copy default /etc/apt/sources.list"
   become: yes
   copy:
