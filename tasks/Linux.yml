@@ -15,3 +15,9 @@
     regexp: "dateext$"
     line: "dateext"
 
+- name: Disable IPv6
+  copy:
+    src: local-disable-ipv6.conf
+    dest: /etc/sysctl.d/
+  when: "'ipv6_disabled' in group_names"
+
