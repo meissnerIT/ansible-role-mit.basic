@@ -19,3 +19,10 @@
 
 - include_tasks: "{{ ansible_system }}.yml"
 
+# Searches at least in the current directory and the main directory
+- include_tasks: "{{ item }}"
+  with_first_found:
+    - files:
+      - "{{ inventory_hostname }}.yml"
+      skip: yes
+
