@@ -10,7 +10,7 @@
     - git
     - lsb-release
     - patch
-    - python
+    - python3
     - sudo
     - vim
     - zsh

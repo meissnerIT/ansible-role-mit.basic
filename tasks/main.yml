@@ -1,28 +1,36 @@
 ---
 
-# Either use "static: no" or use variables in the include file, otherwise the include will always be used (statically included)
-#- name: "Including Debian 7 (Wheezy)"
-#  include: "Debian_7.yml"
-#  static: no
-#  when: (ansible_distribution == "Debian" and ansible_distribution_major_version == "7")
+# https://docs.ansible.com/ansible/latest/collections/ansible/builtin/first_found_lookup.html
 
 # We use ansible_lsb.id instead of ansible_distribution as this adds support for 
 # UCS (Univention Corporate Server) which reports ansible_distribution=Debian and
 # ansible_lsb.id=Univention
 
-- include_tasks: "{{ ansible_system }}-{{ ansible_lsb.id }}.yml"
-  when: ansible_lsb is defined and ansible_lsb.id is defined
+- name: Include ansible_system-ansible_lsb.id.yml
+  ansible.builtin.include_tasks: "{{ tasks_file }}"
+  when: ansible_lsb and ansible_lsb.id and tasks_file != ""
+  vars:
+    tasks_file: "{{ lookup('ansible.builtin.first_found', files, errors='ignore') }}"
+    files:
+      - "{{ ansible_system }}-{{ ansible_lsb.id }}.yml"
 
 # Used by opdns1 (Debian 9 without lsb_release)
-- include_tasks: "{{ ansible_system }}-{{ ansible_distribution }}.yml"
-  when: ansible_lsb is not defined or ansible_lsb.id is not defined
+- name: Include ansible_system-ansible_distribution.yml
+  ansible.builtin.include_tasks: "{{ tasks_file }}"
+  when: (ansible_lsb is not defined or ansible_lsb.id is not defined) and tasks_file != ""
+  vars:
+    tasks_file: "{{ lookup('ansible.builtin.first_found', files, errors='ignore') }}"
+    files:
+      - "{{ ansible_system }}-{{ ansible_distribution }}.yml"
 
-- include_tasks: "{{ ansible_system }}.yml"
+- name: Include ansible_system.yml
+  include_tasks: "{{ ansible_system }}.yml"
 
-# Searches at least in the current directory and the main directory
-- include_tasks: "{{ item }}"
-  with_first_found:
-    - files:
-      - "{{ inventory_hostname }}.yml"
-      skip: yes
+- name: Include inventory_hostname.yml
+  ansible.builtin.include_tasks: '{{ tasks_file }}'
+  when: tasks_file != ""
+  vars:
+    tasks_file: "{{ lookup('ansible.builtin.first_found', files, errors='ignore') }}"
+    files:
+      - "local/roles/{{ ansible_role_name }}/tasks/{{ inventory_hostname }}.yml"
 

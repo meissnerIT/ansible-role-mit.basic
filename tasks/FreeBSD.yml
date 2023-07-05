@@ -1,0 +1,9 @@
+---
+# Common tasks for all FreeBSD machines.
+
+- name: Fetch all available system binary updates daily (freebsd-update)
+  copy:
+    src: 900.freebsd-update
+    dest: /usr/local/etc/periodic/daily/
+    mode: 0755
+
