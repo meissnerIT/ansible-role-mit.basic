@@ -1,9 +1,43 @@
 ---
 # Common tasks for all FreeBSD machines.
 
+# man periodic
+# _show_success   - scripts returning 0
+# _show_info      - scripts returning 1
+# _show_badconfig - scripts returning 2
+- name: Configure periodic output
+  lineinfile:
+    dest: /etc/periodic.conf
+    create: yes
+    regexp: "^{{ item.property | regex_escape() }}:"
+    line: "{{ item.property }}={{ item.value }}"
+  with_items:
+    - { property: 'daily_show_success', value: 'NO' }
+    - { property: 'weekly_show_success', value: 'NO' }
+    - { property: 'monthly_show_success', value: 'NO' }
+    - { property: 'security_show_success', value: 'NO' }
+    - { property: 'daily_status_disks_enable', value: 'NO' }
+    - { property: 'daily_status_uptime_enable', value: 'NO' }
+
 - name: Fetch all available system binary updates daily (freebsd-update)
   copy:
     src: 900.freebsd-update
     dest: /usr/local/etc/periodic/daily/
     mode: 0755
+
+# https://github.com/tykling/ansible-roles/blob/master/freebsd_base/tasks/newsyslog.yml
+
+- name: "Make sure /usr/local/etc/newsyslog.conf.d/ exists"
+  file:
+    path: /usr/local/etc/newsyslog.conf.d
+    state: directory
+
+# Equivalent to logrotate's dateext
+- name: "Make newsyslog use timestamps instead of sequential filenames for rotated logfiles"
+  lineinfile:
+    dest: "/etc/crontab"
+    regexp: "	newsyslog"
+    line: "0	*	*	*	*	root	newsyslog -t DEFAULT"
+    state: "present"
+  notify: "rename sequential logs"
 
