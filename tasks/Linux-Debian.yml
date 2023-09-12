@@ -16,6 +16,12 @@
     - zsh
   tags: apt
 
+- name: Ensure basic packages (remove deprecated)
+  apt:
+    state: absent
+    pkg:
+    - apt-listchanges
+
 - name: Configure cron-apt (Debian 7)
   lineinfile:
     dest=/etc/cron-apt/action.d/3-download
