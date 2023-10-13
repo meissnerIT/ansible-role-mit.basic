@@ -11,7 +11,9 @@ else
     FDISK=gdisk
 fi
 
-for disk in $(find /dev/ \( -name "sd?" -o -name "vd?" \) -printf '%f\n'); do
-    ${FDISK} -l /dev/${disk} > /.mit-disk-info/${disk}.${FDISK}
+for disk in $(find /dev/ -maxdepth 1 \( -name "sd?" -o -name "vd?" \) -printf '%f\n'); do
+    # Devices with a card reader (francis):
+    # fdisk: cannot open /dev/sdb: No medium found
+    ${FDISK} -l /dev/${disk} > /.mit-disk-info/${disk}.${FDISK} 2>/dev/null
 done
 
