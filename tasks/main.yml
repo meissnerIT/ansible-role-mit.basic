@@ -8,11 +8,11 @@
 
 - name: Include ansible_system-ansible_lsb.id.yml
   ansible.builtin.include_tasks: "{{ tasks_file }}"
-  when: ansible_lsb and ansible_lsb.id and tasks_file != ""
+  when: tasks_file != ""
   vars:
     tasks_file: "{{ lookup('ansible.builtin.first_found', files, errors='ignore') }}"
     files:
-      - "{{ ansible_system }}-{{ ansible_lsb.id }}.yml"
+      - "{{ ansible_system }}-{{ ansible_lsb.id|default('') }}.yml"
 
 # Used by opdns1 (Debian 9 without lsb_release)
 - name: Include ansible_system-ansible_distribution.yml
