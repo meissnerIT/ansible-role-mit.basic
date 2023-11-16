@@ -79,6 +79,5 @@
     # We use this playbook for ansible_lsb.id=(Debian|Raspbian)
     src: sources.list-Linux-{{ ansible_lsb.id }}_{{ ansible_lsb.major_release }}
     dest: /etc/apt/sources.list
-  when: ansible_distribution == "Debian"
   notify: Update apt cache
 
