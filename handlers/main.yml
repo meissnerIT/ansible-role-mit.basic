@@ -2,7 +2,8 @@
 # Handlers
 
 - name: newaliases
-  command: /usr/bin/newaliases
+  # 2023-11-16: postfix: /usr/bin/newaliases, sendmail: /usr/sbin/newaliases
+  command: newaliases
 
 - name: update-ca-certificates
   command: /usr/sbin/update-ca-certificates
