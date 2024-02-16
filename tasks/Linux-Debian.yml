@@ -22,32 +22,37 @@
     pkg:
     - apt-listchanges
 
-- name: Configure cron-apt (Debian 7)
-  lineinfile:
-    dest=/etc/cron-apt/action.d/3-download
-    regexp='Show-Upgraded=true'
-    line='dist-upgrade -y -o APT::Get::Show-Upgraded=true'
-  when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int == 7)
+- name: Calcualte cron-apt setting
+  set_fact:
+    cron_apt_config: >-
+      {% if enable_auto_update_system|default(True) 
+        %}upgrade -y --with-new-pkgs -o APT::Get::Show-Upgraded=true
+      {% else
+        %}dist-upgrade -d -y -o APT::Get::Show-Upgraded=true
+      {% endif %}
 
 - name: Configure cron-apt
   lineinfile:
-    dest=/etc/cron-apt/action.d/3-download
-    regexp='Show-Upgraded=true'
-    line='upgrade -y --with-new-pkgs -o APT::Get::Show-Upgraded=true'
-  when: (ansible_distribution == "Debian" and ansible_distribution_major_version|int > 7)
+    dest: /etc/cron-apt/action.d/3-download
+    regexp: Show-Upgraded=true
+    line: "{{ cron_apt_config }}"
+  # Raspbian reports "Debian" as ansible_distribution
+  when: (ansible_distribution == "Debian")
         or (ansible_distribution == "Ubuntu" and ansible_distribution_major_version|int > 18)
     # Raspbian reports "Debian" as ansible_distribution
 
 - name: "sudoers: mit-defaults"
-  copy: >
-    src=sudoers.d-local-mit-dedicated
-    dest=/etc/sudoers.d/local-mit-dedicated
-    mode=0440
-    validate='visudo -cf %s'
+  copy:
+    src: sudoers.d-local-mit-dedicated
+    dest: /etc/sudoers.d/local-mit-dedicated
+    mode: 0440
+    validate: 'visudo -cf %s'
 
 # sudo update-alternatives --set editor /usr/bin/vim.basic
 - name: "Use vim as default editor"
-  alternatives: name=editor path=/usr/bin/vim.basic
+  alternatives:
+    name: editor
+    path: /usr/bin/vim.basic
   become: yes
 
 - stat: path=/etc/aliases
@@ -74,6 +79,5 @@
     # We use this playbook for ansible_lsb.id=(Debian|Raspbian)
     src: sources.list-Linux-{{ ansible_lsb.id }}_{{ ansible_lsb.major_release }}
     dest: /etc/apt/sources.list
-  when: ansible_distribution == "Debian"
   notify: Update apt cache
 

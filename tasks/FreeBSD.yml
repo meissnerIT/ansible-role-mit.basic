@@ -18,12 +18,16 @@
     - { property: 'security_show_success', value: 'NO' }
     - { property: 'daily_status_disks_enable', value: 'NO' }
     - { property: 'daily_status_uptime_enable', value: 'NO' }
+    - { property: 'security_status_pkgaudit_enable', value: 'NO' }
 
-- name: Fetch all available system binary updates daily (freebsd-update)
+- name: Fetch all available system and pkg binary updates daily (freebsd-update)
   copy:
-    src: 900.freebsd-update
+    src: "{{ item }}"
     dest: /usr/local/etc/periodic/daily/
     mode: 0755
+  loop:
+    - 900.freebsd-update
+    - 900.pkg-update
 
 # https://github.com/tykling/ansible-roles/blob/master/freebsd_base/tasks/newsyslog.yml
 
