@@ -40,6 +40,13 @@
   when: ntp_server | default(None) != None and (ansible_distribution == "Debian" or ansible_distribution == "Raspbian") and ansible_distribution_major_version|int > 10
   notify: Restart chrony
 
+# This is needed for some Windows time server
+- name: Configure chrony maxdistance
+  template:
+    src: etc/chrony/conf.d/local-maxdistance.conf
+    dest: /etc/chrony/conf.d/
+  when: chrony_maxdistance
+
 - name: "Configure chrony: Disabled vendor pools"
   ansible.builtin.lineinfile:
     path: /etc/chrony/chrony.conf
