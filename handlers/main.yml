@@ -12,6 +12,11 @@
   apt:
     update_cache: yes
 
+- name: Restart chrony
+  service:
+    name: chrony
+    state: restarted
+
 # https://github.com/tykling/ansible-roles/blob/master/handlers/handlers/main.yml
 - name: "rename sequential logs"
   shell: |

@@ -1,10 +1,11 @@
 ---
-# common tasks for all Debian and Ubuntu machines
+# common tasks for all Debian, Raspbian and Ubuntu machines
 
 # #19984: Automatische Aktualisierung fuer Ubuntu Rechner: cron-apt kann genutzt werden
 - name: Ensure basic packages
   apt:
     pkg:
+    - chrony
     - cron-apt
     - etckeeper
     - git
@@ -31,15 +32,30 @@
         %}dist-upgrade -d -y -o APT::Get::Show-Upgraded=true
       {% endif %}
 
+- name: Configure chrony ntp server
+  template:
+    src: etc/chrony/sources.d/local-ntp-server.sources
+    dest: /etc/chrony/sources.d/local-ntp-server.sources
+  # This playbook supports Debian, Raspbian and Ubuntu
+  when: ntp_server | default(None) != None and (ansible_distribution == "Debian" or ansible_distribution == "Raspbian") and ansible_distribution_major_version|int > 10
+  notify: Restart chrony
+
+- name: "Configure chrony: Disabled vendor pools"
+  ansible.builtin.lineinfile:
+    path: /etc/chrony/chrony.conf
+    backrefs: yes
+    regexp: '^pool (.*)'
+    line: '#pool \1'
+  when: ntp_server is defined and (ansible_distribution == "Debian" or ansible_distribution == "Raspbian") and ansible_distribution_major_version|int > 10
+
 - name: Configure cron-apt
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/cron-apt/action.d/3-download
     regexp: Show-Upgraded=true
     line: "{{ cron_apt_config }}"
   # Raspbian reports "Debian" as ansible_distribution
   when: (ansible_distribution == "Debian")
         or (ansible_distribution == "Ubuntu" and ansible_distribution_major_version|int > 18)
-    # Raspbian reports "Debian" as ansible_distribution
 
 - name: "sudoers: mit-defaults"
   copy:
@@ -59,7 +75,7 @@
   register: etc_aliases
 
 - name: "Set mail alias for root -> {{ alias_root }}"
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/aliases
     create: no
     regexp: "^root:"
