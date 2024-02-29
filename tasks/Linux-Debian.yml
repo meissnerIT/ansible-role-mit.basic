@@ -45,7 +45,7 @@
   template:
     src: etc/chrony/conf.d/local-maxdistance.conf
     dest: /etc/chrony/conf.d/
-  when: chrony_maxdistance
+  when: chrony_maxdistance is defined
 
 - name: "Configure chrony: Disabled vendor pools"
   ansible.builtin.lineinfile:
