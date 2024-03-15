@@ -32,7 +32,21 @@
         %}dist-upgrade -d -y -o APT::Get::Show-Upgraded=true
       {% endif %}
 
-- name: Configure chrony ntp server
+- name: Configure timezone
+  copy:
+    dest: /etc/timezone
+    content: "{{ timezone }}\n"
+  when: timezone is defined
+
+- name: Configure chrony ntp server (Debian < 11)
+  ansible.builtin.lineinfile:
+    path: /etc/chrony/chrony.conf
+    #regexp: '^server '
+    line: 'server {{ ntp_server }} iburst'
+  when: ntp_server is defined and (ansible_distribution == "Debian" or ansible_distribution == "Raspbian") and ansible_distribution_major_version|int < 11
+  notify: Restart chrony
+    
+- name: Configure chrony ntp server (Debian >= 11)
   template:
     src: etc/chrony/sources.d/local-ntp-server.sources
     dest: /etc/chrony/sources.d/local-ntp-server.sources
@@ -40,20 +54,20 @@
   when: ntp_server | default(None) != None and (ansible_distribution == "Debian" or ansible_distribution == "Raspbian") and ansible_distribution_major_version|int > 10
   notify: Restart chrony
 
-# This is needed for some Windows time server
-- name: Configure chrony maxdistance
-  template:
-    src: etc/chrony/conf.d/local-maxdistance.conf
-    dest: /etc/chrony/conf.d/
-  when: chrony_maxdistance is defined
-
 - name: "Configure chrony: Disabled vendor pools"
   ansible.builtin.lineinfile:
     path: /etc/chrony/chrony.conf
     backrefs: yes
     regexp: '^pool (.*)'
     line: '#pool \1'
-  when: ntp_server is defined and (ansible_distribution == "Debian" or ansible_distribution == "Raspbian") and ansible_distribution_major_version|int > 10
+  when: ntp_server is defined and (ansible_distribution == "Debian" or ansible_distribution == "Raspbian")
+
+# This is needed for some Windows time server
+- name: Configure chrony maxdistance
+  template:
+    src: etc/chrony/conf.d/local-maxdistance.conf
+    dest: /etc/chrony/conf.d/
+  when: chrony_maxdistance is defined
 
 - name: Configure cron-apt
   ansible.builtin.lineinfile:
