@@ -32,10 +32,17 @@
         %}dist-upgrade -d -y -o APT::Get::Show-Upgraded=true
       {% endif %}
 
+# https://unix.stackexchange.com/a/384977
 - name: Configure timezone
   copy:
     dest: /etc/timezone
     content: "{{ timezone }}\n"
+  when: timezone is defined
+- name: Configure localtime
+  file:
+    src: /usr/share/zoneinfo/{{ timezone }}
+    dest: /etc/localtime
+    state: link
   when: timezone is defined
 
 - name: Configure chrony ntp server (Debian < 11)
