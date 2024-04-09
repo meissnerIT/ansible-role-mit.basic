@@ -21,3 +21,10 @@
     dest: /etc/sysctl.d/
   when: "'ipv6_disabled' in group_names"
 
+- name: Setup ssh with sftp and chroot
+  copy:
+    src: local-sftp-chroot.conf
+    dest: /etc/ssh/sshd_config.d/
+  notify: Reload sshd
+  when: "'sshd_sftp_chroot' in group_names"
+

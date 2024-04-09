@@ -17,6 +17,18 @@
     name: chrony
     state: restarted
 
+- name: sshd configtest
+  command: sshd -t
+  register: sshd_configtest
+  listen: Reload sshd
+
+- name: Reload sshd
+  service:
+    name: sshd
+    state: reloaded
+  when: sshd_configtest.rc == 0
+  listen: Reload sshd
+
 # https://github.com/tykling/ansible-roles/blob/master/handlers/handlers/main.yml
 - name: "rename sequential logs"
   shell: |
