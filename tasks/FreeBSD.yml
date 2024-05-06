@@ -45,3 +45,49 @@
     state: "present"
   notify: "rename sequential logs"
 
+- name: Configure DMA smarthost (FreeBSD >= 14)
+  lineinfile:
+    dest: /etc/dma/dma.conf
+    regexp: "^{{ item.property | regex_escape() }}"
+    line: "{{ item.property }}{{ item.value }}"
+  loop:
+    - { property: 'SMARTHOST', value: " {{ smarthost }}" }
+    - { property: 'NULLCLIENT', value: '' }
+  when: ansible_distribution_major_version|int >= 14
+
+- name: Update /etc/mail/mailer.conf
+  lineinfile:
+    dest: /etc/mail/mailer.conf
+    regexp: "^{{ item.property | regex_escape() }}"
+    line: "{{ item.property }}{{ item.value }}\t/usr/libexec/dma"
+  loop:
+    - { property: 'sendmail', value: '' }
+    - { property: 'mailq', value: "\t" }
+    - { property: 'newaliases', value: '' }
+  when: ansible_distribution_major_version|int >= 14
+
+- name: Update /etc/mail/mailer.conf
+  lineinfile:
+    dest: /etc/mail/mailer.conf
+    regexp: "send-mail.*/usr/local/libexec/nullmailer/sendmail"
+    state: absent
+  when: ansible_distribution_major_version|int >= 14
+
+- name: Remove deprecated nullmailer (FreeBSD >= 14)
+  ansible.builtin.package:
+    name: nullmailer
+    state: absent
+  when: ansible_distribution_major_version|int >= 14
+
+- name: Remove deprecated sendmail configuration (FreeBSD >= 14)
+  lineinfile:
+    dest: /etc/rc.conf
+    regexp: "^{{ item }}="
+    state: absent
+  loop:
+    - sendmail_enable
+    - sendmail_submit_enable
+    - sendmail_outbound_enable
+    - sendmail_msp_queue_enable
+  when: ansible_distribution_major_version|int >= 14
+
