@@ -45,6 +45,20 @@
     state: "present"
   notify: "rename sequential logs"
 
+- stat:
+    path: /etc/aliases
+  register: etc_aliases
+
+- name: "Set mail alias for root -> {{ alias_root }}"
+  ansible.builtin.lineinfile:
+    dest: /etc/aliases
+    create: no
+    regexp: "^root:"
+    line: "root: {{ alias_root }}"
+  notify: newaliases
+  when: etc_aliases.stat.exists
+  tags: mail
+
 - name: Configure DMA smarthost (FreeBSD >= 14)
   lineinfile:
     dest: /etc/dma/dma.conf
