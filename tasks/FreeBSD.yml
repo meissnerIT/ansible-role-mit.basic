@@ -1,6 +1,15 @@
 ---
 # Common tasks for all FreeBSD machines.
 
+# https://docs.freebsd.org/en/books/handbook/network-servers/#network-ntp
+# 2024-05-31: Chosen ntpd as chrony has 7 dependencies
+- name: Enable ntpd
+  lineinfile:
+    dest: /etc/rc.conf
+    regexp: "^ntpd_enable="
+    line: 'ntpd_enable="YES"'
+  notify: Restart ntpd
+  
 # man periodic
 # _show_success   - scripts returning 0
 # _show_info      - scripts returning 1
@@ -18,6 +27,7 @@
     - { property: 'security_show_success', value: 'NO' }
     - { property: 'daily_status_disks_enable', value: 'NO' }
     - { property: 'daily_status_uptime_enable', value: 'NO' }
+    - { property: 'security_status_pfdenied_enable', value: 'NO' }
     - { property: 'security_status_pkgaudit_enable', value: 'NO' }
 
 - name: Fetch all available system and pkg binary updates daily (freebsd-update)

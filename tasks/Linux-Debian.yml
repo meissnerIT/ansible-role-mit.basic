@@ -125,3 +125,11 @@
     dest: /etc/apt/sources.list
   notify: Update apt cache
 
+- name: Add 'default-terminal' to /etc/tmux.conf
+  ansible.builtin.lineinfile:
+    dest: /etc/tmux.conf
+    create: yes
+    regexp: '^set -g default-terminal "tmux-256color"'
+    line: 'set -g default-terminal "tmux-256color"'
+  when: ansible_distribution_major_version|int < 12
+

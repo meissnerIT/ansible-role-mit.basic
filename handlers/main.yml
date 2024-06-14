@@ -17,6 +17,11 @@
     name: chrony
     state: restarted
 
+- name: Restart ntpd
+  service:
+    name: ntpd
+    state: restarted
+
 - name: sshd configtest
   command: sshd -t
   register: sshd_configtest

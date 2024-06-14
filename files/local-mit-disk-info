@@ -17,3 +17,6 @@ for disk in $(find /dev/ -maxdepth 1 \( -name "sd?" -o -name "vd?" \) -printf '%
     ${FDISK} -l /dev/${disk} > /.mit-disk-info/${disk}.${FDISK} 2>/dev/null
 done
 
+# Don't return the last exit status of the last fdisk
+exit 0
+
