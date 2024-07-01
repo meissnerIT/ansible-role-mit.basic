@@ -85,10 +85,14 @@
   when: (ansible_distribution == "Debian")
         or (ansible_distribution == "Ubuntu" and ansible_distribution_major_version|int > 18)
 
-- name: "sudoers: mit-defaults"
-  copy:
-    src: sudoers.d-local-mit-dedicated
-    dest: /etc/sudoers.d/local-mit-dedicated
+- name: Set sudo group to "sudo"
+  set_fact:
+    sudo_group: sudo
+
+- name: "Copy /etc/sudoers.d/local-mit-dedicated"
+  template:
+    src: sudoers.d/local-mit-dedicated
+    dest: /etc/sudoers.d/
     mode: 0440
     validate: 'visudo -cf %s'
 

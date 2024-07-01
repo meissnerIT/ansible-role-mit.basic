@@ -24,10 +24,10 @@
   command: 'ucr set mail/relayhost="{{ smtp_relayhost }}"'
   when: smtp_relayhost is defined and relayhostset.rc == 1
 
-- name: "sudoers: mit-defaults-ucs"
+- name: "Copy /etc/sudoers.d/local-mit-dedicated"
   copy:
-    src: sudoers.d-local-mit-dedicated-ucs
-    dest: /etc/sudoers.d/local-mit-dedicated-ucs
+    src: sudoers.d/local-mit-dedicated-ucs
+    dest: /etc/sudoers.d/
     mode: 0440
     validate: 'visudo -cf %s'
 

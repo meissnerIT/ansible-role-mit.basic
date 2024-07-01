@@ -1,6 +1,27 @@
 ---
 # Common tasks for all FreeBSD machines.
 
+- name: Set is_jail and sudo_group=wheel
+  set_fact:
+    is_jail: "{{ 'jails' in ansible_virtualization_tech_guest }}"
+    sudo_group: wheel
+
+# template uses sudo_group
+- name: "Copy /etc/sudoers.d/local-mit-dedicated"
+  template:
+    src: sudoers.d/local-mit-dedicated
+    dest: /usr/local/etc/sudoers.d/
+    mode: 0440
+    validate: 'visudo -cf %s'
+
+# man loader.conf
+- name: Set autoboot_delay="0"
+  lineinfile:
+    dest: /boot/loader.conf
+    regexp: '^autoboot_delay='
+    line: 'autoboot_delay="0"'
+  when: not is_jail
+
 # https://docs.freebsd.org/en/books/handbook/network-servers/#network-ntp
 # 2024-05-31: Chosen ntpd as chrony has 7 dependencies
 - name: Enable ntpd
@@ -8,8 +29,20 @@
     dest: /etc/rc.conf
     regexp: "^ntpd_enable="
     line: 'ntpd_enable="YES"'
+    state: "{{ 'absent' if (is_jail) else 'present' }}"
   notify: Restart ntpd
   
+- name: Update rc.conf
+  lineinfile:
+    dest: /etc/rc.conf
+    regexp: "^{{ item.property | regex_escape() }}="
+    line: '{{ item.property }}="{{ item.value }}"'
+  with_items:
+    # 2024-07-01: Sounds like a good default
+    - { property: 'clear_tmp_enable', value: 'YES' }
+    # We use syslog only local - don't open any sockets
+    - { property: 'syslogd_flags', value: '-ss' }
+
 # man periodic
 # _show_success   - scripts returning 0
 # _show_info      - scripts returning 1
@@ -30,14 +63,20 @@
     - { property: 'security_status_pfdenied_enable', value: 'NO' }
     - { property: 'security_status_pkgaudit_enable', value: 'NO' }
 
-- name: Fetch all available system and pkg binary updates daily (freebsd-update)
+# https://docs.freebsd.org/en/books/handbook/jails/#jail-upgrading
+# Jails must be updated from the host operating system.
+- name: Fetch all available system updates daily (freebsd-update)
   copy:
-    src: "{{ item }}"
+    src: 900.freebsd-update
     dest: /usr/local/etc/periodic/daily/
     mode: 0755
-  loop:
-    - 900.freebsd-update
-    - 900.pkg-update
+  when: not is_jail
+
+- name: Fetch all available pkg binary updates daily
+  copy:
+    src: 900.pkg-update
+    dest: /usr/local/etc/periodic/daily/
+    mode: 0755
 
 # https://github.com/tykling/ansible-roles/blob/master/freebsd_base/tasks/newsyslog.yml
 
@@ -114,4 +153,7 @@
     - sendmail_outbound_enable
     - sendmail_msp_queue_enable
   when: ansible_distribution_major_version|int >= 14
+
+- name: Encrypt swap with GELI
+  
 
