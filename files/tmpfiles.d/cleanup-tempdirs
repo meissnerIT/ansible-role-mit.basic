@@ -1,0 +1,10 @@
+# vim: ts=4 sw=4 noet
+# See https://manpages.debian.org/stretch/systemd/tmpfiles.d.5.en.html
+
+# Recursively clear /tmp on boot
+R! /tmp/
+
+# Clear contents of /tmp and /var/tmp if not accessed for the specified time.
+# Type Path Mode UID GID Age Argument
+e /tmp/     - - - 10d
+e /var/tmp/ - - - 30d
