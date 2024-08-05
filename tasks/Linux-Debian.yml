@@ -137,3 +137,25 @@
     line: 'set -g default-terminal "tmux-256color"'
   when: ansible_distribution_major_version|int < 12
 
+- name: Generate /etc/fstab.new if necessary
+  ansible.builtin.script:
+    cmd: >
+      ../files/fstab-tempmounts.py -v -t '{{ mit.basic_tmp_size }}'
+      /etc/fstab /etc/fstab.new
+  args:
+    creates: /etc/fstab.new
+
+- name: Register temp file status
+  ansible.builtin.stat:
+    path: /etc/fstab.new
+  register: fnew
+
+- name: Replace /etc/fstab if necessary
+  ansible.builtin.shell:
+    cmd: mv -f /etc/fstab.new /etc/fstab
+  when: fnew.stat.size is defined and fnew.stat.size > 0
+
+- name: Create /etc/tmpfiles.d/local-cleanup-tempdirs
+  ansible.builtin.copy:
+    src: tmpfiles.d/local-cleanup-tempdirs
+    dest: /etc/tmpfiles.d/
