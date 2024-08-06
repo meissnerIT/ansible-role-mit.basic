@@ -1,0 +1,5 @@
+# vim: ts=2 sw=2 et
+---
+# Size of tmpfs volume mounted to /tmp. Value will be used
+# during a rewrite of /etc/fstab.
+mit_basic_tmp_size: 512M
