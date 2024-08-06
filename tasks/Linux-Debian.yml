@@ -140,7 +140,7 @@
 - name: Generate /etc/fstab.new if necessary
   ansible.builtin.script:
     cmd: >
-      ../files/fstab-tempmounts.py -v -t '{{ mit.basic_tmp_size }}'
+      ../files/fstab-tempmounts.py -v -t '{{ mit_basic_tmp_size }}'
       /etc/fstab /etc/fstab.new
   args:
     creates: /etc/fstab.new
