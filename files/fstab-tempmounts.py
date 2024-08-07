@@ -49,16 +49,31 @@ def extract_tmp_volume(fstab: str) -> Optional[str]:
             match = rex.search(line)
             if match is not None:
                 return match.group(1)
-    err('Failed to extract volume mounted to /tmp')
+    say('Found no /volume mounted to /tmp')
 
 
-def rewrite_fstab(fstab: str, outfile: str, tmpsize: str, volume: str):
+def write_fstab_entries(fout, tmpsize: str, vartmp: str = ''):
+    """Write fstab entries to given output file.
+
+    :arg fout: output file handle
+    :arg tmpsize: size of /tmp
+    :arg vartmp: volume for /var/tmp, optional.
+    """
+    say('/tmp on tmpfs')
+    print(f'tmpfs /tmp tmpfs mode=1777,uid=0,gid=0,size={tmpsize}', file=fout)
+    if vartmp:
+        print(f'{vartmp} /var/tmp ext4 defaults 0 2', file=fout)
+    else:
+        say('/var/tmp unspecified')
+
+
+def rewrite_fstab(fstab: str, outfile: str, tmpsize: str, vartmp: Optional[str]):
     """Update contents of the given fstab file and write result to outfile.
 
     :arg fstab: file to update.
     :arg outfile: file to write, or '-' for stdout.
     :arg tmpsize: size of tmpfs volume to mount on /tmp.
-    :arg volume: volume to mount on /var/tmp.
+    :arg vartmp: volume to mount on /var/tmp, or None.
     """
     rex = re.compile(r'^/\S+\s+/tmp\s')
     if outfile == '-':
@@ -71,19 +86,17 @@ def rewrite_fstab(fstab: str, outfile: str, tmpsize: str, volume: str):
             if match is None:
                 print(line.rstrip(), file=fout)
             else:
-                print(f'tmpfs /tmp tmpfs mode=1777,uid=0,gid=0,size={tmpsize}', file=fout)
-                print(f'{volume} /var/tmp ext4 defaults 0 2', file=fout)
+                write_fstab_entries(fout, tmpsize, vartmp)
+    if vartmp is None:
+        write_fstab_entries(fout, tmpsize)
     if outfile != '-':
         fout.close()
 
 
 def main() -> int:
-    if fstab_status(args.fstab) == 0:
-        return 0
-    tv = extract_tmp_volume(args.fstab)
-    if tv is None:
-        return 2
-    rewrite_fstab(args.fstab, args.outfile, args.tmpsize, tv)
+    if fstab_status(args.fstab) != 0:
+        volume = extract_tmp_volume(args.fstab)
+        rewrite_fstab(args.fstab, args.outfile, args.tmpsize, volume)
     return 0
 
 
