@@ -6,3 +6,10 @@
 # https://docs.freebsd.org/en/books/handbook/cutting-edge/
 freebsd-update cron
 
+if test -f /usr/local/bin/zabbix-lld-jail-bases; then
+    for root in $(/usr/local/bin/zabbix-lld-jail-bases --raw); do
+        # we had our delay before, so use --not-running-from-cron now
+        freebsd-update -b $root --not-running-from-cron fetch > /dev/null
+    done
+fi
+
