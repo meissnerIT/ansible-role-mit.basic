@@ -25,7 +25,9 @@
 - name: sshd configtest
   command: sshd -t
   register: sshd_configtest
-  listen: Reload sshd
+  listen:
+    - Reload sshd
+    - Restart sshd
 
 - name: Reload sshd
   service:
@@ -33,6 +35,13 @@
     state: reloaded
   when: sshd_configtest.rc == 0
   listen: Reload sshd
+
+- name: Restart sshd
+  service:
+    name: sshd
+    state: restarted
+  when: sshd_configtest.rc == 0
+  listen: Restart sshd
 
 # https://github.com/tykling/ansible-roles/blob/master/handlers/handlers/main.yml
 - name: "rename sequential logs"

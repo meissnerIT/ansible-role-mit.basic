@@ -1,6 +1,16 @@
 # common tasks for all Debian, Raspbian and Ubuntu machines
 # vim: ts=2 sw=2 et
 ---
+# Siehe #21540
+- name: Harden SSH
+  ansible.builtin.script:
+  args:
+    cmd: files/harden-ssh.sh debian11 '{{ conf }}'
+    creates: '{{ conf }}'
+  notify: Restart sshd
+  vars:
+    conf: /etc/ssh/sshd_config.d/local-hardening.conf
+  when: mit_basic_harden_ssh_debian11
 
 # #19984: Automatische Aktualisierung fuer Ubuntu Rechner: cron-apt kann genutzt werden
 - name: Ensure basic packages
@@ -142,6 +152,7 @@
   ansible.builtin.copy:
     src: tmpfiles.d/local-cleanup-tempdirs
     dest: /etc/tmpfiles.d/
+    mode: '0644'
 
 - name: Remove previous temporary fstab
   ansible.builtin.file:
@@ -162,6 +173,7 @@
   register: ft
 
 - name: Replace /etc/fstab if necessary
-  ansible.builtin.shell:
+  ansible.builtin.command:
     cmd: mv -f /etc/fstab-ansible.tmp /etc/fstab
   when: ft.stat.size is defined and ft.stat.size > 0
+  changed_when: ft.stat.size is defined and ft.stat.size > 0
