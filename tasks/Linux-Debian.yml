@@ -144,11 +144,15 @@
       /etc/fstab /etc/fstab.new
   args:
     creates: /etc/fstab.new
+  changed_when: "'is up-to-date' not in fstab_tempmounts_py.stdout"
+  register: fstab_tempmounts_py
+  when: mit_basic_use_tmpfs_for_tmp is defined and mit_basic_use_tmpfs_for_tmp
 
 - name: Register temp file status
   ansible.builtin.stat:
     path: /etc/fstab.new
   register: fnew
+  when: mit_basic_use_tmpfs_for_tmp is defined and mit_basic_use_tmpfs_for_tmp
 
 - name: Replace /etc/fstab if necessary
   ansible.builtin.shell:
@@ -159,3 +163,4 @@
   ansible.builtin.copy:
     src: tmpfiles.d/local-cleanup-tempdirs
     dest: /etc/tmpfiles.d/
+
