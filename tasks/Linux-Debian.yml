@@ -165,11 +165,21 @@
     dest: /etc/tmpfiles.d/
 
 # Harden SSH config (#21540)
+- name: Replace sshd host keys
+  ansible.builtin.script: files/sshd-replace-keys.sh '{{ cflag }}'
+  creates: '{{ cflag }}'
+  notify: Reload sshd
+  vars:
+    # Completion flag file
+    cflag: /etc/ssh/.flag.local-host-keys-replaced
+  when: mit_basic_harden_ssh_debian11
+
 - name: Copy sshd config
   ansible.builtin.copy:
-    src: 'sshd_config.d/{{ item }}'
+    src: 'sshd-Linux-Debian_11/{{ item }}'
     dest: /etc/ssh/sshd_config.d/
   loop:
     - local-hardening.conf
     - mit-defaults.conf
+  notify: Reload sshd
   when: mit_basic_harden_ssh_debian11
