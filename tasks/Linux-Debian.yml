@@ -164,3 +164,12 @@
     src: tmpfiles.d/local-cleanup-tempdirs
     dest: /etc/tmpfiles.d/
 
+# Harden SSH config (#21540)
+- name: Copy sshd config
+  ansible.builtin.copy:
+    src: 'sshd_config.d/{{ item }}'
+    dest: /etc/ssh/sshd_config.d/
+  loop:
+    - local-hardening.conf
+    - mit-defaults.conf
+  when: mit_basic_harden_ssh_debian11
