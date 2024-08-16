@@ -137,27 +137,19 @@
     line: 'set -g default-terminal "tmux-256color"'
   when: ansible_distribution_major_version|int < 12
 
-- name: Generate /etc/fstab.new if necessary
+- name: Check if /tmp is mounted with tmpfs
   ansible.builtin.script:
     cmd: >
       ../files/fstab-tempmounts.py -v -t '{{ mit_basic_tmp_size }}'
       /etc/fstab /etc/fstab.new
-  args:
-    creates: /etc/fstab.new
-  changed_when: "'is up-to-date' not in fstab_tempmounts_py.stdout"
+  changed_when: "'needs update' in fstab_tempmounts_py.stdout"
   register: fstab_tempmounts_py
   when: mit_basic_use_tmpfs_for_tmp is defined and mit_basic_use_tmpfs_for_tmp
 
-- name: Register temp file status
-  ansible.builtin.stat:
-    path: /etc/fstab.new
-  register: fnew
-  when: mit_basic_use_tmpfs_for_tmp is defined and mit_basic_use_tmpfs_for_tmp
-
-- name: Replace /etc/fstab if necessary
+- name: Replace /etc/fstab for having /tmp mounted with tmpfs
   ansible.builtin.shell:
     cmd: mv -f /etc/fstab.new /etc/fstab
-  when: fnew.stat.size is defined and fnew.stat.size > 0
+  when: fstab_tempmounts_py.stdout is defined and 'needs update' in fstab_tempmounts_py.stdout
 
 - name: Create /etc/tmpfiles.d/local-cleanup-tempdirs
   ansible.builtin.copy:
