@@ -151,9 +151,14 @@
     cmd: mv -f /etc/fstab.new /etc/fstab
   when: fstab_tempmounts_py.stdout is defined and 'needs update' in fstab_tempmounts_py.stdout
 
-- name: Create /etc/tmpfiles.d/local-cleanup-tempdirs
+- name: Ensure absence of inactive config
+  ansible.builtin.file:
+    path: /etc/tmpfiles.d/local-cleanup-tempdirs
+    state: absent
+
+- name: Create /etc/tmpfiles.d/local-cleanup-tempdirs.conf
   ansible.builtin.copy:
-    src: tmpfiles.d/local-cleanup-tempdirs
+    src: tmpfiles.d/local-cleanup-tempdirs.conf
     dest: /etc/tmpfiles.d/
 
 # Harden SSH config (#21540)
