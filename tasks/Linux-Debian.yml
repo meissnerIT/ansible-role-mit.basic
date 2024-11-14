@@ -26,7 +26,7 @@
 - name: Calcualte cron-apt setting
   ansible.builtin.set_fact:
     cron_apt_config: >-
-      {% if enable_auto_update_system|default(True) 
+      {% if auto_update_system_enable|default(True) 
         %}upgrade -y --with-new-pkgs -o APT::Get::Show-Upgraded=true
       {% else
         %}dist-upgrade -d -y -o APT::Get::Show-Upgraded=true
