@@ -60,8 +60,10 @@
     - { property: 'security_show_success', value: 'NO' }
     - { property: 'daily_status_disks_enable', value: 'NO' }
     - { property: 'daily_status_uptime_enable', value: 'NO' }
+    - { property: 'security_status_baseaudit_enable', value: 'NO' } # /usr/local/etc/periodic/security/405.pkg-base-audit
     - { property: 'security_status_pfdenied_enable', value: 'NO' }
     - { property: 'security_status_pkgaudit_enable', value: 'NO' }
+  when: not periodic_output_enable|default(false)
 
 # https://docs.freebsd.org/en/books/handbook/jails/#jail-upgrading
 # Jails must be updated from the host operating system.
@@ -154,6 +156,5 @@
     - sendmail_msp_queue_enable
   when: ansible_distribution_major_version|int >= 14
 
-- name: Encrypt swap with GELI
+#- name: Encrypt swap with GELI
   
-
