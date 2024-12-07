@@ -112,7 +112,7 @@
     create: false
     regexp: "^root:"
     line: "root: {{ alias_root }}"
-  notify: newaliases
+  notify: Newaliases
   when: etc_aliases.stat.exists
   tags: mail
 

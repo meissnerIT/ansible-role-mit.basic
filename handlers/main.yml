@@ -1,51 +1,49 @@
 ---
 # Handlers
 
-- name: newaliases
+- name: Newaliases
   # 2023-11-16: postfix: /usr/bin/newaliases, sendmail: /usr/sbin/newaliases
-  command: newaliases
-
-- name: update-ca-certificates
-  command: /usr/sbin/update-ca-certificates
-
+  ansible.builtin.command: newaliases
+- name: Update-ca-certificates
+  ansible.builtin.command: /usr/sbin/update-ca-certificates
 - name: Update apt cache
-  apt:
-    update_cache: yes
+  ansible.builtin.apt:
+    update_cache: true
 
 - name: Restart chrony
-  service:
+  ansible.builtin.service:
     name: chrony
     state: restarted
 
 - name: Restart ntpd
-  service:
+  ansible.builtin.service:
     name: ntpd
     state: restarted
 
-- name: sshd configtest
-  command: sshd -t
+- name: Sshd configtest
+  ansible.builtin.command: sshd -t
   register: sshd_configtest
   listen:
     - Reload sshd
     - Restart sshd
 
 - name: Reload sshd
-  service:
+  ansible.builtin.service:
     name: sshd
     state: reloaded
   when: sshd_configtest.rc == 0
   listen: Reload sshd
 
 - name: Restart sshd
-  service:
+  ansible.builtin.service:
     name: sshd
     state: restarted
   when: sshd_configtest.rc == 0
   listen: Restart sshd
 
 # https://github.com/tykling/ansible-roles/blob/master/handlers/handlers/main.yml
-- name: "rename sequential logs"
-  shell: |
+- name: Rename sequential logs
+  ansible.builtin.shell: |
     INCLUDEPATHS=$(cat /etc/newsyslog.conf | grep "^<include>" | cut -d " " -f 2)
     for LOGPATH in $(cat /etc/newsyslog.conf $INCLUDEPATHS | grep -Ev "^(#|$|<include>)" | awk "{print \$1}" | sed -e 's,/[^/]*$,,' | sort -u); do
         for EXT in bz2 xz; do
@@ -56,4 +54,3 @@
             done
         done
     done
-

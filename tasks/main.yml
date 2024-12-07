@@ -1,5 +1,4 @@
 ---
-
 # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/first_found_lookup.html
 
 # We use ansible_lsb.id instead of ansible_distribution as this adds support for 
@@ -12,7 +11,7 @@
   vars:
     tasks_file: "{{ lookup('ansible.builtin.first_found', files, errors='ignore') }}"
     files:
-      - "{{ ansible_system }}-{{ ansible_lsb.id|default('') }}.yml"
+      - "{{ ansible_system }}-{{ ansible_lsb.id | default('') }}.yml"
 
 # Used by opdns1 (Debian 9 without lsb_release)
 - name: Include ansible_system-ansible_distribution.yml
@@ -21,16 +20,14 @@
   vars:
     tasks_file: "{{ lookup('ansible.builtin.first_found', files, errors='ignore') }}"
     files:
-      - "{{ ansible_system }}-{{ ansible_distribution }}.yml"
+      - "{{ ansible_system }}-{{ ansible_distribution }}.yml"
 
 - name: Include ansible_system.yml
-  include_tasks: "{{ ansible_system }}.yml"
-
+  ansible.builtin.include_tasks: "{{ ansible_system }}.yml"
 - name: Include inventory_hostname.yml
-  ansible.builtin.include_tasks: '{{ tasks_file }}'
+  ansible.builtin.include_tasks: "{{ tasks_file }}"
   when: tasks_file != ""
   vars:
     tasks_file: "{{ lookup('ansible.builtin.first_found', files, errors='ignore') }}"
     files:
-      - "local/roles/{{ ansible_role_name }}/tasks/{{ inventory_hostname }}.yml"
-
+      - local/roles/{{ ansible_role_name }}/tasks/{{ inventory_hostname }}.yml
