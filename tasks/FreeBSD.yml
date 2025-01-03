@@ -116,7 +116,7 @@
   when: etc_aliases.stat.exists
   tags: mail
 
-- name: Configure DMA smarthost (FreeBSD >= 14)
+- name: Configure DMA smarthost
   ansible.builtin.lineinfile:
     dest: /etc/dma/dma.conf
     regexp: ^{{ item.property | regex_escape() }}
@@ -124,7 +124,13 @@
   loop:
     - { property: SMARTHOST, value: " {{ smarthost }}" }
     - { property: NULLCLIENT, value: "" }
-  when: ansible_distribution_major_version|int >= 14
+
+- name: Configure DMA smarthost port
+  ansible.builtin.lineinfile:
+    dest: /etc/dma/dma.conf
+    regexp: "^PORT "
+    line: "PORT {{ smarthost_port }}"
+  when: smarthost_port is defined
 
 - name: Update /etc/mail/mailer.conf
   ansible.builtin.lineinfile:
