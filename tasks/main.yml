@@ -1,7 +1,7 @@
 ---
 # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/first_found_lookup.html
 
-# We use ansible_lsb.id instead of ansible_distribution as this adds support for 
+# We use ansible_lsb.id instead of ansible_distribution as this adds support for
 # UCS (Univention Corporate Server) which reports ansible_distribution=Debian and
 # ansible_lsb.id=Univention
 

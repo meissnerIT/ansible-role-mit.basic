@@ -26,7 +26,7 @@
 - name: Calcualte cron-apt setting
   ansible.builtin.set_fact:
     cron_apt_config: >-
-      {% if auto_update_system_enable|default(True) 
+      {% if auto_update_system_enable|default(True)
         %}upgrade -y --with-new-pkgs -o APT::Get::Show-Upgraded=true
       {% else
         %}dist-upgrade -d -y -o APT::Get::Show-Upgraded=true
@@ -37,6 +37,7 @@
   ansible.builtin.copy:
     dest: /etc/timezone
     content: "{{ timezone }}\n"
+    mode: "644"
   when: timezone is defined
 - name: Configure localtime
   ansible.builtin.file:
@@ -48,7 +49,7 @@
 - name: Configure chrony ntp server (Debian < 11)
   ansible.builtin.lineinfile:
     path: /etc/chrony/chrony.conf
-    #regexp: '^server '
+    # regexp: '^server '
     line: server {{ ntp_server }} iburst
   when: ntp_server is defined and (ansible_distribution == "Debian" or ansible_distribution == "Raspbian") and ansible_distribution_major_version|int < 11
   notify: Restart chrony
@@ -56,9 +57,11 @@
 - name: Configure chrony ntp server (Debian >= 11)
   ansible.builtin.template:
     src: etc/chrony/sources.d/local-ntp-server.sources
-    dest: /etc/chrony/sources.d/local-ntp-server.sources
+    dest: /etc/chrony/sources.d/
+    mode: "644"
   # This playbook supports Debian, Raspbian and Ubuntu
-  when: ntp_server | default(None) != None and (ansible_distribution == "Debian" or ansible_distribution == "Raspbian") and ansible_distribution_major_version|int > 10
+  when: ntp_server | default(None) != None
+      and (ansible_distribution == "Debian" or ansible_distribution == "Raspbian") and ansible_distribution_major_version|int > 10
   notify: Restart chrony
 
 - name: "Configure chrony: Disabled vendor pools"
@@ -74,6 +77,7 @@
   ansible.builtin.template:
     src: etc/chrony/conf.d/local-maxdistance.conf
     dest: /etc/chrony/conf.d/
+    mode: "644"
   when: chrony_maxdistance is defined
 
 - name: Configure cron-apt
@@ -102,7 +106,8 @@
     path: /usr/bin/vim.basic
   become: true
 
-- ansible.builtin.stat:
+- name: Stat /etc/aliases
+  ansible.builtin.stat:
     path: /etc/aliases
   register: etc_aliases
 
@@ -127,6 +132,7 @@
     # We use this playbook for ansible_lsb.id=(Debian|Raspbian)
     src: sources.list-Linux-{{ ansible_lsb.id }}_{{ ansible_lsb.major_release }}
     dest: /etc/apt/sources.list
+    mode: "644"
   notify: Update apt cache
 
 - name: Add 'default-terminal' to /etc/tmux.conf
@@ -135,6 +141,7 @@
     create: true
     regexp: ^set -g default-terminal "tmux-256color"
     line: set -g default-terminal "tmux-256color"
+    mode: "644"
   when: ansible_distribution_major_version|int < 12
 
 - name: Check if /tmp is mounted with tmpfs
@@ -160,6 +167,7 @@
   ansible.builtin.copy:
     src: tmpfiles.d/local-cleanup-tempdirs.conf
     dest: /etc/tmpfiles.d/
+    mode: "644"
 
 # Harden SSH config (#21540)
 - name: Replace sshd host keys
@@ -177,5 +185,17 @@
   ansible.builtin.copy:
     src: sshd-Linux-Debian_11/local-hardening.conf
     dest: /etc/ssh/sshd_config.d/
+    mode: "644"
   notify: Reload sshd
   when: mit_basic_harden_ssh_debian11
+
+- name: Install zfs-autobackup
+  ansible.builtin.include_tasks: install-zfs-autobackup.yml
+  when: zfs_autobackup_enabled is defined and zfs_autobackup_enabled
+- name: Set zfs_auto_snapshot_binary
+  ansible.builtin.set_fact:
+    zfs_autobackup_binary: /opt/zfs-autobackup/.venv/bin/zfs-autobackup
+    zfs_autobackup_storage_pool: tank
+- name: Setup zfs-autobackup
+  ansible.builtin.include_tasks: setup-zfs-autobackup.yml
+  when: zfs_autobackup_enabled is defined and zfs_autobackup_enabled

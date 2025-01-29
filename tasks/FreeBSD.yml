@@ -59,6 +59,7 @@
     create: true
     regexp: "^{{ item.property | regex_escape() }}:"
     line: "{{ item.property }}={{ item.value }}"
+    mode: "644"
   with_items:
     - { property: daily_show_success, value: "NO" }
     - { property: weekly_show_success, value: "NO" }
@@ -92,6 +93,7 @@
   ansible.builtin.file:
     path: /usr/local/etc/newsyslog.conf.d
     state: directory
+    mode: "755"
 
 # Equivalent to logrotate's dateext
 - name: Make newsyslog use timestamps instead of sequential filenames for rotated logfiles
@@ -102,7 +104,8 @@
     state: present
   notify: Rename sequential logs
 
-- ansible.builtin.stat:
+- name: Set etc_aliases
+  ansible.builtin.stat:
     path: /etc/aliases
   register: etc_aliases
 
@@ -132,7 +135,7 @@
     line: "PORT {{ smarthost_port }}"
   when: smarthost_port is defined
 
-- name: Update /etc/mail/mailer.conf
+- name: Update /etc/mail/mailer.conf # noqa no-tabs
   ansible.builtin.lineinfile:
     dest: /etc/mail/mailer.conf
     regexp: ^{{ item.property | regex_escape() }}
@@ -168,4 +171,14 @@
     - sendmail_msp_queue_enable
   when: ansible_distribution_major_version|int >= 14
 
-#- name: Encrypt swap with GELI
+# TODO - name: Encrypt swap with GELI
+
+- name: Install zfs-autobackup
+  ansible.builtin.package:
+    name: py311-zfs-autobackup
+- name: Set zfs_auto_snapshot_binary
+  ansible.builtin.set_fact:
+    zfs_autobackup_binary: /usr/local/bin/zfs-autobackup
+    zfs_autobackup_storage_pool: zroot
+- name: Setup zfs-autobackup
+  ansible.builtin.include_tasks: setup-zfs-autobackup.yml

@@ -1,0 +1,14 @@
+---
+# Regular zfs snapshots [MIT-21715]
+
+- name: Create zfs tag for periodical snapshots
+  ansible.builtin.command:
+    cmd: "zfs set autobackup:localsnap=true {{ zfs_autobackup_storage_pool }}"
+  changed_when: false
+
+- name: Install zfs-autobackup cronjob
+  ansible.builtin.cron:
+    user: root
+    name: Regular zfs snapshots [MIT-21715]
+    special_time: hourly
+    job: "{{ zfs_autobackup_binary }} localsnap --keep-source 1h1d,1d1w"
