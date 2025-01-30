@@ -43,3 +43,14 @@
     requirements: "{{ target }}/requirements.txt"
     virtualenv: "{{ target }}/.venv"
   environment: "{{ proxy_env }}"
+
+##############################################################################
+
+# Required on Debian 11
+- name: Add PATH to crontab of user root
+  ansible.builtin.cron:
+    user: root
+    name: PATH
+    env: true
+    job: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  when: ansible_os_family == "Debian"
