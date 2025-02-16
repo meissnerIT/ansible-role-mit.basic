@@ -12,5 +12,7 @@ To list the datasets and defined excludes:
 
 ```sh
 zfs get -t filesystem autobackup:localsnap
-zfs set autobackup:localsnap=false tank/mysql
+sudo zfs set autobackup:localsnap=false tank/mysql
+
+for snap in $(sudo zfs list -t snapshot tank/automysqlbackup | grep "@localsnap-" | awk '{print $1;}'); sudo zfs destroy $snap; end
 ```
