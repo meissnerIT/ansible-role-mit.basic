@@ -7,6 +7,7 @@
     create: true
     regexp: compress$
     line: compress
+    mode: "644"
 
 - name: "Logrotate: Enable dateext"
   ansible.builtin.lineinfile:
@@ -14,16 +15,19 @@
     create: true
     regexp: dateext$
     line: dateext
+    mode: "644"
 
 - name: Disable IPv6
   ansible.builtin.template:
     src: local-disable-ipv6.conf
     dest: /etc/sysctl.d/
+    mode: "644"
   when: "'ipv6_disabled' in group_names"
 
 - name: Setup ssh with sftp and chroot
   ansible.builtin.copy:
     src: local-sftp-chroot.conf
     dest: /etc/ssh/sshd_config.d/
+    mode: "644"
   notify: Reload sshd
   when: "'sshd_sftp_chroot' in group_names"

@@ -6,6 +6,14 @@
     cmd: "zfs set autobackup:localsnap=true {{ zfs_autobackup_storage_pool }}"
   changed_when: false
 
+- name: Set excludes for zfs-autobackup
+  ansible.builtin.command:
+    cmd: "zfs set autobackup:localsnap=false {{ item }}"
+  changed_when: false
+  with_items:
+    - "{{ mit_basic_zfs_snapshot_excludes }}"
+  when: mit_basic_zfs_snapshot_excludes is defined
+
 - name: Install zfs-autobackup cronjob
   ansible.builtin.cron:
     user: root
