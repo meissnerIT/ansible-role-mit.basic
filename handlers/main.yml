@@ -41,6 +41,10 @@
   when: sshd_configtest.rc == 0
   listen: Restart sshd
 
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+
 # https://github.com/tykling/ansible-roles/blob/master/handlers/handlers/main.yml
 - name: Rename sequential logs
   ansible.builtin.shell: |
