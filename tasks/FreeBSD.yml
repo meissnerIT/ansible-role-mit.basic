@@ -5,6 +5,7 @@
   ansible.builtin.set_fact:
     is_jail: "{{ 'jails' in ansible_virtualization_tech_guest }}"
     sudo_group: wheel
+    users_have_been_moved_to_sudo: "{{ users_have_been_moved_to_sudo | default(False) }}"
 
 - name: Check hostname
   ansible.builtin.assert:
@@ -12,9 +13,23 @@
     fail_msg: Current hostname '{{ ansible_fqdn }}' is not '{{ zabbix_hostname | default(inventory_hostname) }}'
     quiet: true
 
-# template uses sudo_group
+- name: Copy /usr/local/etc/sudoers.d/local-group-wheel-tmp (deprecated, move users to group sudo)
+  ansible.builtin.copy:
+    src: sudoers.d/local-group-wheel-tmp
+    dest: /usr/local/etc/sudoers.d/
+    mode: "0440"
+    validate: visudo -cf %s
+  when: not users_have_been_moved_to_sudo
+
+- name: Remove deprecated /usr/local/etc/sudoers.d/local-group-wheel-tmp
+  ansible.builtin.file:
+    path: /usr/local/etc/sudoers.d/local-group-wheel-tmp
+    mode: "0440"
+    state: absent
+  when: users_have_been_moved_to_sudo
+
 - name: Copy /etc/sudoers.d/local-mit-dedicated
-  ansible.builtin.template:
+  ansible.builtin.copy:
     src: sudoers.d/local-mit-dedicated
     dest: /usr/local/etc/sudoers.d/
     mode: "0440"

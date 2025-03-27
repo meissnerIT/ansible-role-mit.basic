@@ -16,5 +16,4 @@ Defaults:%sudo  env_keep += "GREP_COLOR"
 # "sudo scp" or "sudo rsync" should be able to use your SSH agent.
 Defaults        env_keep += "SSH_AGENT_PID SSH_AUTH_SOCK"
 
-%{{ sudo_group }}   ALL=(ALL:ALL) NOPASSWD: ALL
-
+%sudo           ALL=(ALL:ALL) NOPASSWD: ALL
