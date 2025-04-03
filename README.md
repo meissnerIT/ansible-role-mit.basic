@@ -2,7 +2,7 @@ Common configuration for hosts.
 
 ## Regular zfs snapshots [MIT-21715]
 
-To enable regular zfs snapshots the following variable has to be set:
+[ZFS autobackup](https://github.com/psy0rz/zfs_autobackup) is used for regular snapshots. To enable them the following variable has to be set:
 
 ```sh
 zfs_autobackup_enabled=true
