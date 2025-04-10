@@ -2,137 +2,169 @@
 # Common tasks for all FreeBSD machines.
 
 - name: Set is_jail and sudo_group=wheel
-  set_fact:
+  ansible.builtin.set_fact:
     is_jail: "{{ 'jails' in ansible_virtualization_tech_guest }}"
     sudo_group: wheel
+    users_have_been_moved_to_sudo: "{{ users_have_been_moved_to_sudo | default(False) }}"
 
-# template uses sudo_group
-- name: "Copy /etc/sudoers.d/local-mit-dedicated"
-  template:
+- name: Check hostname
+  ansible.builtin.assert:
+    that: ansible_fqdn == zabbix_hostname|default(inventory_hostname)
+    fail_msg: Current hostname '{{ ansible_fqdn }}' is not '{{ zabbix_hostname | default(inventory_hostname) }}'
+    quiet: true
+
+- name: Copy /usr/local/etc/sudoers.d/local-group-wheel-tmp (deprecated, move users to group sudo)
+  ansible.builtin.copy:
+    src: sudoers.d/local-group-wheel-tmp
+    dest: /usr/local/etc/sudoers.d/
+    mode: "0440"
+    validate: visudo -cf %s
+  when: not users_have_been_moved_to_sudo
+
+- name: Remove deprecated /usr/local/etc/sudoers.d/local-group-wheel-tmp
+  ansible.builtin.file:
+    path: /usr/local/etc/sudoers.d/local-group-wheel-tmp
+    mode: "0440"
+    state: absent
+  when: users_have_been_moved_to_sudo
+
+- name: Copy /etc/sudoers.d/local-mit-dedicated
+  ansible.builtin.copy:
     src: sudoers.d/local-mit-dedicated
     dest: /usr/local/etc/sudoers.d/
-    mode: 0440
-    validate: 'visudo -cf %s'
+    mode: "0440"
+    validate: visudo -cf %s
 
 # man loader.conf
 - name: Set autoboot_delay="0"
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /boot/loader.conf
-    regexp: '^autoboot_delay='
-    line: 'autoboot_delay="0"'
+    regexp: ^autoboot_delay=
+    line: autoboot_delay="0"
   when: not is_jail
 
 # https://docs.freebsd.org/en/books/handbook/network-servers/#network-ntp
 # 2024-05-31: Chosen ntpd as chrony has 7 dependencies
 - name: Enable ntpd
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/rc.conf
-    regexp: "^ntpd_enable="
-    line: 'ntpd_enable="YES"'
+    regexp: ^ntpd_enable=
+    line: ntpd_enable="YES"
     state: "{{ 'absent' if (is_jail) else 'present' }}"
   notify: Restart ntpd
-  
+
 - name: Update rc.conf
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/rc.conf
-    regexp: "^{{ item.property | regex_escape() }}="
+    regexp: ^{{ item.property | regex_escape() }}=
     line: '{{ item.property }}="{{ item.value }}"'
   with_items:
     # 2024-07-01: Sounds like a good default
-    - { property: 'clear_tmp_enable', value: 'YES' }
+    - { property: clear_tmp_enable, value: "YES" }
     # We use syslog only local - don't open any sockets
-    - { property: 'syslogd_flags', value: '-ss' }
+    - { property: syslogd_flags, value: -ss }
 
 # man periodic
 # _show_success   - scripts returning 0
 # _show_info      - scripts returning 1
 # _show_badconfig - scripts returning 2
 - name: Configure periodic output
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/periodic.conf
-    create: yes
+    create: true
     regexp: "^{{ item.property | regex_escape() }}:"
     line: "{{ item.property }}={{ item.value }}"
+    mode: "644"
   with_items:
-    - { property: 'daily_show_success', value: 'NO' }
-    - { property: 'weekly_show_success', value: 'NO' }
-    - { property: 'monthly_show_success', value: 'NO' }
-    - { property: 'security_show_success', value: 'NO' }
-    - { property: 'daily_status_disks_enable', value: 'NO' }
-    - { property: 'daily_status_uptime_enable', value: 'NO' }
-    - { property: 'security_status_pfdenied_enable', value: 'NO' }
-    - { property: 'security_status_pkgaudit_enable', value: 'NO' }
+    - { property: daily_show_success, value: "NO" }
+    - { property: weekly_show_success, value: "NO" }
+    - { property: monthly_show_success, value: "NO" }
+    - { property: security_show_success, value: "NO" }
+    - { property: daily_status_disks_enable, value: "NO" }
+    - { property: daily_status_uptime_enable, value: "NO" }
+    - { property: security_status_baseaudit_enable, value: "NO" } # /usr/local/etc/periodic/security/405.pkg-base-audit
+    - { property: security_status_pfdenied_enable, value: "NO" }
+    - { property: security_status_pkgaudit_enable, value: "NO" }
+  when: not periodic_output_enable|default(false)
 
 # https://docs.freebsd.org/en/books/handbook/jails/#jail-upgrading
 # Jails must be updated from the host operating system.
 - name: Fetch all available system updates daily (freebsd-update)
-  copy:
+  ansible.builtin.copy:
     src: 900.freebsd-update
     dest: /usr/local/etc/periodic/daily/
-    mode: 0755
+    mode: "0755"
   when: not is_jail
 
 - name: Fetch all available pkg binary updates daily
-  copy:
+  ansible.builtin.copy:
     src: 900.pkg-update
     dest: /usr/local/etc/periodic/daily/
-    mode: 0755
+    mode: "0755"
 
 # https://github.com/tykling/ansible-roles/blob/master/freebsd_base/tasks/newsyslog.yml
 
-- name: "Make sure /usr/local/etc/newsyslog.conf.d/ exists"
-  file:
+- name: Make sure /usr/local/etc/newsyslog.conf.d/ exists
+  ansible.builtin.file:
     path: /usr/local/etc/newsyslog.conf.d
     state: directory
+    mode: "755"
 
 # Equivalent to logrotate's dateext
-- name: "Make newsyslog use timestamps instead of sequential filenames for rotated logfiles"
-  lineinfile:
-    dest: "/etc/crontab"
-    regexp: "	newsyslog"
-    line: "0	*	*	*	*	root	newsyslog -t DEFAULT"
-    state: "present"
-  notify: "rename sequential logs"
+- name: Make newsyslog use timestamps instead of sequential filenames for rotated logfiles
+  ansible.builtin.lineinfile:
+    dest: /etc/crontab
+    regexp: "\tnewsyslog"
+    line: "0\t*\t*\t*\t*\troot\tnewsyslog -t DEFAULT"
+    state: present
+  notify: Rename sequential logs
 
-- stat:
+- name: Set etc_aliases
+  ansible.builtin.stat:
     path: /etc/aliases
   register: etc_aliases
 
-- name: "Set mail alias for root -> {{ alias_root }}"
+- name: Set mail alias for root -> {{ alias_root }}
   ansible.builtin.lineinfile:
     dest: /etc/aliases
-    create: no
+    create: false
     regexp: "^root:"
     line: "root: {{ alias_root }}"
-  notify: newaliases
+  notify: Newaliases
   when: etc_aliases.stat.exists
   tags: mail
 
-- name: Configure DMA smarthost (FreeBSD >= 14)
-  lineinfile:
+- name: Configure DMA smarthost
+  ansible.builtin.lineinfile:
     dest: /etc/dma/dma.conf
-    regexp: "^{{ item.property | regex_escape() }}"
+    regexp: ^{{ item.property | regex_escape() }}
     line: "{{ item.property }}{{ item.value }}"
   loop:
-    - { property: 'SMARTHOST', value: " {{ smarthost }}" }
-    - { property: 'NULLCLIENT', value: '' }
-  when: ansible_distribution_major_version|int >= 14
+    - { property: SMARTHOST, value: " {{ smarthost }}" }
+    - { property: NULLCLIENT, value: "" }
 
-- name: Update /etc/mail/mailer.conf
-  lineinfile:
+- name: Configure DMA smarthost port
+  ansible.builtin.lineinfile:
+    dest: /etc/dma/dma.conf
+    regexp: "^PORT "
+    line: "PORT {{ smarthost_port }}"
+  when: smarthost_port is defined
+
+- name: Update /etc/mail/mailer.conf # noqa no-tabs
+  ansible.builtin.lineinfile:
     dest: /etc/mail/mailer.conf
-    regexp: "^{{ item.property | regex_escape() }}"
+    regexp: ^{{ item.property | regex_escape() }}
     line: "{{ item.property }}{{ item.value }}\t/usr/libexec/dma"
   loop:
-    - { property: 'sendmail', value: '' }
-    - { property: 'mailq', value: "\t" }
-    - { property: 'newaliases', value: '' }
+    - { property: sendmail, value: "" }
+    - { property: mailq, value: "\t" }
+    - { property: newaliases, value: "" }
   when: ansible_distribution_major_version|int >= 14
 
 - name: Update /etc/mail/mailer.conf
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/mail/mailer.conf
-    regexp: "send-mail.*/usr/local/libexec/nullmailer/sendmail"
+    regexp: send-mail.*/usr/local/libexec/nullmailer/sendmail
     state: absent
   when: ansible_distribution_major_version|int >= 14
 
@@ -143,9 +175,9 @@
   when: ansible_distribution_major_version|int >= 14
 
 - name: Remove deprecated sendmail configuration (FreeBSD >= 14)
-  lineinfile:
+  ansible.builtin.lineinfile:
     dest: /etc/rc.conf
-    regexp: "^{{ item }}="
+    regexp: ^{{ item }}=
     state: absent
   loop:
     - sendmail_enable
@@ -154,6 +186,23 @@
     - sendmail_msp_queue_enable
   when: ansible_distribution_major_version|int >= 14
 
-- name: Encrypt swap with GELI
-  
+# TODO - name: Encrypt swap with GELI
 
+# Either 39 or 311 (py39 py311)
+- name: Get python prefix
+  ansible.builtin.shell: set -o pipefail && pkg info|egrep -o "^python[0-9]{2,3}-"|egrep -o "[0-9]+"
+  register: python_prefix
+  changed_when: false
+  when: not is_jail
+- name: Install zfs-autobackup
+  ansible.builtin.package:
+    name: py{{ python_prefix.stdout }}-zfs-autobackup
+  when: not is_jail
+- name: Set zfs_auto_snapshot_binary
+  ansible.builtin.set_fact:
+    zfs_autobackup_binary: /usr/local/bin/zfs-autobackup
+    zfs_autobackup_storage_pool: zroot
+  when: not is_jail
+- name: Setup zfs-autobackup
+  ansible.builtin.include_tasks: setup-zfs-autobackup.yml
+  when: not is_jail
