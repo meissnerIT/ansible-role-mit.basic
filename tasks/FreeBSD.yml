@@ -1,10 +1,9 @@
 ---
 # Common tasks for all FreeBSD machines.
 
-- name: Set is_jail and sudo_group=wheel
+- name: Set is_jail
   ansible.builtin.set_fact:
     is_jail: "{{ 'jails' in ansible_virtualization_tech_guest }}"
-    sudo_group: wheel
     users_have_been_moved_to_sudo: "{{ users_have_been_moved_to_sudo | default(False) }}"
 
 - name: Check hostname
