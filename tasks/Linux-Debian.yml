@@ -88,10 +88,6 @@
   # Raspbian reports "Debian" as ansible_distribution
   when: (ansible_distribution == "Debian") or (ansible_distribution == "Ubuntu" and ansible_distribution_major_version|int > 18)
 
-- name: Set sudo group to "sudo"
-  ansible.builtin.set_fact:
-    sudo_group: sudo
-
 - name: Copy /etc/sudoers.d/local-mit-dedicated
   ansible.builtin.copy:
     src: sudoers.d/local-mit-dedicated
@@ -156,6 +152,7 @@
 - name: Replace /etc/fstab for having /tmp mounted with tmpfs
   ansible.builtin.command:
     cmd: mv -f /etc/fstab.new /etc/fstab
+  changed_when: true
   when: fstab_tempmounts_py.stdout is defined and 'needs update' in fstab_tempmounts_py.stdout
 
 - name: Ensure absence of inactive config
