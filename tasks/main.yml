@@ -24,6 +24,7 @@
 
 - name: Include ansible_system.yml
   ansible.builtin.include_tasks: "{{ ansible_system }}.yml"
+
 - name: Include inventory_hostname.yml
   ansible.builtin.include_tasks: "{{ tasks_file }}"
   when: tasks_file != ""
@@ -31,3 +32,10 @@
     tasks_file: "{{ lookup('ansible.builtin.first_found', files, errors='ignore') }}"
     files:
       - local/roles/{{ ansible_role_name }}/tasks/{{ inventory_hostname }}.yml
+
+- name: Update resolv.conf
+  ansible.builtin.copy:
+    src: "{{ mit_basic_resolv_conf }}"
+    dest: /etc/resolv.conf
+    mode: "644"
+  when: mit_basic_resolv_conf is defined
