@@ -185,7 +185,21 @@
     - sendmail_msp_queue_enable
   when: ansible_distribution_major_version|int >= 14
 
-# TODO - name: Encrypt swap with GELI
+# https://docs.freebsd.org/de/books/handbook/disks/#disks-encrypting-geli
+# Jails haben meist kein swap
+- name: Check if swap is defined in /etc/fstab
+  ansible.builtin.command: egrep '^(\/dev\/[a-z0-9]+).+none.+swap.+sw.+0.+0$' /etc/fstab
+  changed_when: false
+  failed_when: false
+  register: swap_in_fstab
+
+- name: Encrypt swap with GELI
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    backrefs: true
+    regexp: ^(\/dev\/[a-z0-9]+)[ \t]+none[ \t]+swap[ \t]+sw[ \t]+0[ \t]+0$
+    line: '\1.eli        none            swap    sw              0       0'
+  when: swap_in_fstab.stdout != ""
 
 # Either 39 or 311 (py39 py311)
 - name: Get python prefix
