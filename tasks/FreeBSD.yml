@@ -12,6 +12,12 @@
     fail_msg: Current hostname '{{ ansible_fqdn }}' is not '{{ zabbix_hostname | default(inventory_hostname) }}'
     quiet: true
 
+# FreeBSD uses the group wheel nearly the same as Debian uses group adm.
+# We use it primarily for reading logs, so we use group sudo for sudo.
+- name: Create group sudo
+  ansible.builtin.group:
+    name: sudo
+
 - name: Copy /usr/local/etc/sudoers.d/local-group-wheel-tmp (deprecated, move users to group sudo)
   ansible.builtin.copy:
     src: sudoers.d/local-group-wheel-tmp
@@ -214,7 +220,7 @@
 - name: Set zfs_auto_snapshot_binary
   ansible.builtin.set_fact:
     zfs_autobackup_binary: /usr/local/bin/zfs-autobackup
-    zfs_autobackup_storage_pool: zroot
+    zfs_autobackup_storage_pool: "{{ zfs_autobackup_storage_pool | default('zroot') }}"
   when: not is_jail
 - name: Setup zfs-autobackup
   ansible.builtin.include_tasks: setup-zfs-autobackup.yml
