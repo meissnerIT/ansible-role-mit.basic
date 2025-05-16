@@ -1,6 +1,21 @@
 ---
 # common tasks for all Debian, Raspbian and Ubuntu machines
 
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: auto
+  when: ansible_facts.packages is not defined
+
+- name: Hold packages
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  when: "item in ansible_facts.packages"
+  loop:
+    # Don't upgrade the kernel on a Radxa RockPi S [MIT-21822]
+    - linux-dtb-current-rockchip64
+    - linux-image-current-rockchip64
+
 # #19984: Automatische Aktualisierung fuer Ubuntu Rechner: cron-apt kann genutzt werden
 - name: Ensure basic packages
   ansible.builtin.apt:
@@ -14,8 +29,6 @@
       - python3
       - sudo
       - vim
-      - zsh
-  tags: apt
 
 - name: Ensure basic packages (remove deprecated)
   ansible.builtin.apt:
@@ -155,7 +168,7 @@
   changed_when: true
   when: fstab_tempmounts_py.stdout is defined and 'needs update' in fstab_tempmounts_py.stdout
 
-- name: Ensure absence of inactive config
+- name: Remove deprecated /etc/tmpfiles.d/local-cleanup-tempdirs
   ansible.builtin.file:
     path: /etc/tmpfiles.d/local-cleanup-tempdirs
     state: absent
