@@ -6,16 +6,6 @@
     manager: auto
   when: ansible_facts.packages is not defined
 
-- name: Hold packages
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  when: "item in ansible_facts.packages"
-  loop:
-    # Don't upgrade the kernel on a Radxa RockPi S [MIT-21822]
-    - linux-dtb-current-rockchip64
-    - linux-image-current-rockchip64
-
 # #19984: Automatische Aktualisierung fuer Ubuntu Rechner: cron-apt kann genutzt werden
 - name: Ensure basic packages
   ansible.builtin.apt:
@@ -35,15 +25,6 @@
     state: absent
     pkg:
       - apt-listchanges
-
-- name: Calcualte cron-apt setting
-  ansible.builtin.set_fact:
-    cron_apt_config: >-
-      {% if auto_update_system_enable|default(True)
-        %}upgrade -y --with-new-pkgs -o APT::Get::Show-Upgraded=true
-      {% else
-        %}dist-upgrade -d -y -o APT::Get::Show-Upgraded=true
-      {% endif %}
 
 # https://unix.stackexchange.com/a/384977
 - name: Configure timezone
@@ -77,7 +58,7 @@
     and (ansible_distribution == "Debian" or ansible_distribution == "Raspbian") and ansible_distribution_major_version|int > 10
   notify: Restart chrony
 
-- name: "Configure chrony: Disabled vendor pools"
+- name: "Configure chrony: Disable vendor pools"
   ansible.builtin.lineinfile:
     path: /etc/chrony/chrony.conf
     backrefs: true
@@ -92,6 +73,21 @@
     dest: /etc/chrony/conf.d/
     mode: "644"
   when: chrony_maxdistance is defined
+
+# Only use one time synchronization method
+- name: Disable VMware Tools periodic time synchronization
+  ansible.builtin.command: vmware-toolbox-cmd timesync disable
+  changed_when: false
+  when: ntp_server is defined and 'open-vm-tools' in ansible_facts.packages
+
+- name: Calcualte cron-apt setting
+  ansible.builtin.set_fact:
+    cron_apt_config: >-
+      {% if auto_update_system_enable|default(True)
+        %}upgrade -y --with-new-pkgs -o APT::Get::Show-Upgraded=true
+      {% else
+        %}dist-upgrade -d -y -o APT::Get::Show-Upgraded=true
+      {% endif %}
 
 - name: Configure cron-apt
   ansible.builtin.lineinfile:
