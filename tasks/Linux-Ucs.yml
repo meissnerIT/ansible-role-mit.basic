@@ -1,0 +1,12 @@
+---
+- name: Ensure basic packages
+  ansible.builtin.apt:
+    pkg:
+      - fish
+      - tmux
+
+- name: Ensure basic packages (remove deprecated)
+  ansible.builtin.apt:
+    state: absent
+    pkg:
+      - screen

@@ -2,10 +2,10 @@
 # https://docs.ansible.com/ansible/latest/collections/ansible/builtin/first_found_lookup.html
 
 # We use ansible_lsb.id instead of ansible_distribution as this adds support for
-# UCS (Univention Corporate Server) which reports ansible_distribution=Debian and
+# Ucs (Univention Corporate Server) which reports ansible_distribution=Debian and
 # ansible_lsb.id=Univention
 
-- name: Include ansible_system-ansible_lsb.id.yml
+- name: Include ansible_system-ansible_lsb.id.yml ({{ ansible_system }}-{{ ansible_lsb.id | default('') }}.yml) # noqa: name[template]
   ansible.builtin.include_tasks: "{{ tasks_file }}"
   when: tasks_file != ""
   vars:
@@ -14,7 +14,7 @@
       - "{{ ansible_system }}-{{ ansible_lsb.id | default('') }}.yml"
 
 # Used by opdns1 (Debian 9 without lsb_release)
-- name: Include ansible_system-ansible_distribution.yml
+- name: Include ansible_system-ansible_distribution.yml ({{ ansible_system }}-{{ ansible_distribution }}.yml) # noqa: name[template]
   ansible.builtin.include_tasks: "{{ tasks_file }}"
   when: (ansible_lsb is not defined or ansible_lsb.id is not defined) and tasks_file != ""
   vars:
