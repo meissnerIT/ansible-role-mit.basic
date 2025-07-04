@@ -24,6 +24,12 @@
     mode: "644"
   when: "'ipv6_disabled' in group_names"
 
+- name: Create group sftp-only
+  ansible.builtin.group:
+    name: sftp-only
+    system: true
+  when: "'sshd_sftp_chroot' in group_names"
+
 - name: Setup ssh with sftp and chroot
   ansible.builtin.copy:
     src: local-sftp-chroot.conf
