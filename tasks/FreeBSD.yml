@@ -106,6 +106,14 @@
     src: 900.pkg-update
     dest: /usr/local/etc/periodic/daily/
     mode: "0755"
+    # Updates all jails, too. So no need to run it inside a jail.
+  when: not is_jail
+
+- name: Remove deprecated 900.pkg-update in jail
+  ansible.builtin.file:
+    path: /usr/local/etc/periodic/daily/900.pkg-update
+    state: absent
+  when: is_jail
 
 # https://github.com/tykling/ansible-roles/blob/master/freebsd_base/tasks/newsyslog.yml
 
