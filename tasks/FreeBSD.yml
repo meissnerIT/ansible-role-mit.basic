@@ -48,6 +48,13 @@
     line: autoboot_delay="0"
   when: not is_jail
 
+- name: Copy ssh/moduli (ssh-audit.com)
+  ansible.builtin.copy:
+    src: ssh/moduli-{{ ansible_distribution_version }}
+    dest: /etc/ssh/moduli
+    mode: "644"
+    group: wheel
+
 # https://docs.freebsd.org/en/books/handbook/network-servers/#network-ntp
 # 2024-05-31: Chosen ntpd as chrony has 7 dependencies
 - name: Enable ntpd
