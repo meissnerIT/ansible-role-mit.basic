@@ -1,12 +1,47 @@
 ---
-- name: Ensure basic packages
-  ansible.builtin.apt:
-    pkg:
-      - fish
-      - tmux
+# common tasks for all UCS machines
 
-- name: Ensure basic packages (remove deprecated)
-  ansible.builtin.apt:
-    state: absent
-    pkg:
-      - screen
+# 2025-07-28: No longer needed
+# - name: Install default packages
+#   # The default mailer should be nullmailer, see https://s2.meissner.it/it/projects/mit-doc/wiki/E-Mail_Server
+#   ansible.builtin.apt:
+#     pkg:
+#       - git
+#       - patch
+#       - python
+#       - sudo
+#       - vim
+#   tags: apt
+
+- name: Check postfix relayhost
+  become: false
+  ansible.builtin.command: grep "relayhost = {{ smtp_relayhost }}" /etc/postfix/main.cf
+  changed_when: false
+  register: relayhostset
+  failed_when: false
+  when: smtp_relayhost is defined
+- name: Set postfix relayhost (Univention)
+  ansible.builtin.command: ucr set mail/relayhost="{{ smtp_relayhost }}"
+  changed_when: true
+  when: smtp_relayhost is defined and relayhostset.rc == 1
+  notify: Restart postfix
+
+- name: Check root alias (mail)
+  become: false
+  ansible.builtin.command: 'grep "root: {{ alias_root }}" /etc/aliases'
+  changed_when: false
+  register: root_in_alias
+  failed_when: false
+  when: alias_root is defined
+- name: Set root alias (mail)
+  ansible.builtin.command: ucr set mail/alias/root="{{ alias_root }}"
+  changed_when: true
+  when: alias_root is defined and root_in_alias.rc == 1
+  notify: Newaliases
+
+- name: Copy /etc/sudoers.d/local-mit-dedicated
+  ansible.builtin.copy:
+    src: sudoers.d/local-mit-dedicated-ucs
+    dest: /etc/sudoers.d/
+    mode: "0440"
+    validate: visudo -cf %s
