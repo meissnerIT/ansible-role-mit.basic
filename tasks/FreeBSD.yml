@@ -160,7 +160,7 @@
     regexp: ^{{ item.property | regex_escape() }}
     line: "{{ item.property }}{{ item.value }}"
   loop:
-    - { property: SMARTHOST, value: " {{ smarthost }}" }
+    - { property: SMARTHOST, value: " {{  smtp_relayhost }}" }
     - { property: NULLCLIENT, value: "" }
 
 - name: Configure DMA smarthost port
