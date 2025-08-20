@@ -23,6 +23,15 @@
   ansible.builtin.service:
     name: ntpd
     state: restarted
+- name: Stop ntpd (base)
+  ansible.builtin.service:
+    name: ntpd
+    state: stopped
+
+- name: Restart openntpd
+  ansible.builtin.service:
+    name: openntpd
+    state: restarted
 
 - name: Restart postfix
   ansible.builtin.service:
