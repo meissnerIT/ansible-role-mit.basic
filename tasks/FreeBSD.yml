@@ -187,8 +187,8 @@
   ansible.builtin.lineinfile:
     dest: /etc/dma/dma.conf
     regexp: "^PORT "
-    line: "PORT {{ smarthost_port }}"
-  when: smarthost_port is defined
+    line: "PORT {{ smtp_relayhost_port }}"
+  when: smtp_relayhost_port is defined
 
 - name: Update /etc/mail/mailer.conf # noqa no-tabs
   ansible.builtin.lineinfile:
