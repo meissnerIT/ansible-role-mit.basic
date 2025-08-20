@@ -250,7 +250,7 @@
   when: not is_jail and python_prefix is not defined
 - name: Set vars
   ansible.builtin.set_fact:
-    python_prefix: result_python_prefix.stdout
+    python_prefix: "{{ result_python_prefix.stdout }}"
   when: not is_jail and python_prefix is not defined
 - name: Install zfs-autobackup
   ansible.builtin.package:
