@@ -74,6 +74,22 @@
     name: openntpd
   when: not is_jail
 
+- name: Set ntp server for OpenNTPD
+  ansible.builtin.lineinfile:
+    path: /usr/local/etc/ntpd.conf
+    regexp: "^server {{ ntp_server }}"
+    line: "server {{ ntp_server }}"
+  when: ntp_server is defined
+  notify: Restart openntpd
+
+- name: Remove other ntp servers for OpenNTPD
+  ansible.builtin.lineinfile:
+    path: /usr/local/etc/ntpd.conf
+    regexp: "^servers"
+    state: absent
+  when: ntp_server is defined
+  notify: Restart openntpd
+
 # Force to stop ntpd from base
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
