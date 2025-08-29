@@ -77,7 +77,7 @@
 - name: Set ntp server for OpenNTPD
   ansible.builtin.lineinfile:
     path: /usr/local/etc/ntpd.conf
-    regexp: "^server {{ ntp_server }}"
+    regexp: "^server "
     line: "server {{ ntp_server }}"
   when: ntp_server is defined
   notify: Restart openntpd
