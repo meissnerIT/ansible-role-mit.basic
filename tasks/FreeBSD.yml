@@ -51,7 +51,7 @@
 
 - name: Copy ssh/moduli (ssh-audit.com)
   ansible.builtin.copy:
-    src: ssh/moduli-{{ ansible_distribution_version }}
+    src: ssh/moduli-{{ ansible_distribution_version }}-ssh-audit
     dest: /etc/ssh/moduli
     mode: "644"
     group: wheel
