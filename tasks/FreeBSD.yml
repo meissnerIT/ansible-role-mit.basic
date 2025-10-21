@@ -190,14 +190,21 @@
   when: etc_aliases.stat.exists
   tags: mail
 
-- name: Configure DMA smarthost
+- name: Configure DMA smarthost (1/2)
   ansible.builtin.lineinfile:
     dest: /etc/dma/dma.conf
     regexp: ^{{ item.property | regex_escape() }}
     line: "{{ item.property }}{{ item.value }}"
   loop:
     - { property: SMARTHOST, value: " {{  smtp_relayhost }}" }
-    - { property: NULLCLIENT, value: "" }
+
+- name: Configure DMA smarthost (2/2)
+  ansible.builtin.lineinfile:
+    dest: /etc/dma/dma.conf
+    regexp: ^{{ item }}
+    state: absent
+  loop:
+    - NULLCLIENT
 
 - name: Configure DMA smarthost port
   ansible.builtin.lineinfile:
