@@ -104,12 +104,20 @@
     mode: "0440"
     validate: visudo -cf %s
 
+# https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1051647
+# sudo update-alternatives --install /usr/bin/fd fd /usr/bin/fdfind 10
+- name: Use fdfind as fd
+  ansible.builtin.alternatives:
+    name: fd
+    link: /usr/bin/fd
+    path: /usr/bin/fdfind
+  when: "'fd-find' in ansible_facts.packages"
+
 # sudo update-alternatives --set editor /usr/bin/vim.basic
 - name: Use vim as default editor
-  alternatives:
+  ansible.builtin.alternatives:
     name: editor
     path: /usr/bin/vim.basic
-  become: true
 
 - name: Stat /etc/aliases
   ansible.builtin.stat:
@@ -139,6 +147,18 @@
     dest: /etc/apt/sources.list
     mode: "644"
   notify: Update apt cache
+  when: "not (ansible_lsb.id == 'Raspbian' and ansible_lsb.major_release >= 13)"
+- name: Copy default /etc/apt/sources.list.d/ sources
+  become: true
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: /etc/apt/sources.list.d/
+    mode: "644"
+  loop:
+    - raspbian.sources-{{ ansible_lsb.major_release }}
+    - raspi.sources-{{ ansible_lsb.major_release }}
+  notify: Update apt cache
+  when: "ansible_lsb.id == 'Raspbian' and ansible_lsb.major_release >= 13"
 
 - name: Add 'default-terminal' to /etc/tmux.conf
   ansible.builtin.lineinfile:
