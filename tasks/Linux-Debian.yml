@@ -107,10 +107,10 @@
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1051647
 # sudo update-alternatives --install /usr/bin/fd fd /usr/bin/fdfind 10
 - name: Use fdfind as fd
-  ansible.builtin.alternatives:
-    name: fd
-    link: /usr/bin/fd
-    path: /usr/bin/fdfind
+  ansible.builtin.file:
+    src: /usr/bin/fdfind
+    dest: /usr/local/bin/fd
+    state: link
   when: "'fd-find' in ansible_facts.packages"
 
 # sudo update-alternatives --set editor /usr/bin/vim.basic
