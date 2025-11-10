@@ -1,4 +1,14 @@
+# mit.basic
+
 Common configuration for hosts.
+
+## neovim
+
+The default editor will be set to neovim. To quick install neovim:
+
+```sh
+ansible-playbook -i hosts.ini setup-basic.yml --tags=neovim --limit=myhost
+```
 
 ## Regular zfs snapshots [MIT-21715]
 

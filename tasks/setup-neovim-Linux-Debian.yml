@@ -1,0 +1,50 @@
+---
+# Software used by neovim:
+# - unzip (used to extract stylua)
+# - fd
+# - ripgrep
+- name: Download neovim (Debian 11)
+  ansible.builtin.get_url:
+    url: https://github.com/neovim/neovim-releases/releases/download/v0.11.0/nvim-linux-x86_64.tar.gz
+    dest: /tmp/
+    mode: "644"
+  when: (ansible_distribution == "Debian" and ansible_distribution_major_version | int < 12)
+- name: Download neovim
+  ansible.builtin.get_url:
+    url: https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
+    dest: /tmp/
+    mode: "644"
+  when: >
+    (ansible_distribution == "Debian" and ansible_distribution_major_version | int >= 12)
+    or ansible_distribution == "Ubuntu"
+    or ansible_distribution == "Univention Corporate Server"
+- name: Extract neovim archive
+  ansible.builtin.unarchive:
+    src: /tmp/nvim-linux-x86_64.tar.gz
+    dest: /opt
+    remote_src: true
+- name: Create /opt/bin
+  ansible.builtin.file:
+    path: /opt/bin
+    state: directory
+    mode: "755"
+- name: Link nvim to /opt/bin/
+  ansible.builtin.file:
+    src: /opt/nvim-linux-x86_64/bin/nvim
+    dest: /opt/bin/nvim
+    state: link
+# sudo update-alternatives --install /usr/bin/editor editor /opt/bin/nvim 60 \
+#     --slave /usr/share/man/man1/editor.1 editor.1 /opt/nvim-linux-x86_64/share/man/man1/nvim.1
+- name: Use neovim as default
+  ansible.builtin.alternatives:
+    name: "{{ item }}"
+    path: /opt/bin/nvim
+    priority: 60
+    state: auto
+    subcommands:
+      - name: "{{ item }}.1"
+        link: /usr/share/man/man1/{{ item }}.1
+        path: /opt/nvim-linux-x86_64/share/man/man1/nvim.1
+  loop:
+    - editor
+    - vi

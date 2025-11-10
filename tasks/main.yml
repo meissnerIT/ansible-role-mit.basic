@@ -39,3 +39,19 @@
     dest: /etc/resolv.conf
     mode: "644"
   when: mit_basic_resolv_conf is defined
+
+# Under Debian we install the latest version
+# Under FreeBSD we use the one provided by pkg
+- name: Setup neovim
+  ansible.builtin.include_tasks: "{{ tasks_file }}"
+  args:
+    apply:
+      tags:
+        - neovim
+  tags:
+    - neovim
+  when: tasks_file != ""
+  vars:
+    tasks_file: "{{ lookup('ansible.builtin.first_found', files, errors='ignore') }}"
+    files:
+      - "setup-neovim-{{ ansible_system }}-{{ ansible_lsb.id | default('') }}.yml"
