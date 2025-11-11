@@ -265,6 +265,12 @@
     line: '\1.eli        none            swap    sw              0       0'
   when: swap_in_fstab.stdout != ""
 
+- name: Ensure basic packages (remove deprecated)
+  ansible.builtin.package:
+    state: absent
+    name:
+      - vim
+
 # Either 39 or 311 (py39 py311), mit-get-python-prefix-2025-09-09
 - name: Get python prefix
   ansible.builtin.shell: set -o pipefail && pkg info|egrep -o "^python[0-9]{2,3}-"|egrep -o "[0-9]+"
