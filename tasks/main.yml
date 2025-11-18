@@ -5,6 +5,10 @@
 # Ucs (Univention Corporate Server) which reports ansible_distribution=Debian and
 # ansible_lsb.id=Univention
 
+- name: Set defaults
+  ansible.builtin.set_fact:
+    mit_basic_editor: "{{ mit_basic_editor | default('neovim') }}"
+
 - name: Include ansible_system-ansible_lsb.id.yml ({{ ansible_system }}-{{ ansible_lsb.id | default('') }}.yml) # noqa: name[template]
   ansible.builtin.include_tasks: "{{ tasks_file }}"
   when: tasks_file != ""
@@ -54,4 +58,4 @@
   vars:
     tasks_file: "{{ lookup('ansible.builtin.first_found', files, errors='ignore') }}"
     files:
-      - "setup-neovim-{{ ansible_system }}-{{ ansible_lsb.id | default('') }}.yml"
+      - "setup-{{ mit_basic_editor }}-{{ ansible_system }}-{{ ansible_lsb.id | default('') }}.yml"

@@ -13,6 +13,7 @@
     dest: /tmp/
     mode: "644"
   when: (ansible_distribution == "Debian" and ansible_distribution_major_version | int < 12)
+  environment: "{{ proxy_env }}"
 - name: Download neovim
   ansible.builtin.get_url:
     url: https://github.com/neovim/neovim/releases/download/v{{ mit_basic_neovim_version }}/nvim-linux-x86_64.tar.gz
@@ -22,6 +23,7 @@
     (ansible_distribution == "Debian" and ansible_distribution_major_version | int >= 12)
     or ansible_distribution == "Ubuntu"
     or ansible_distribution == "Univention Corporate Server"
+  environment: "{{ proxy_env }}"
 - name: Extract neovim archive
   ansible.builtin.unarchive:
     src: /tmp/nvim-linux-x86_64.tar.gz

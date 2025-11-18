@@ -1,6 +1,18 @@
 ---
 # common tasks for all Debian, Raspbian and Ubuntu machines
 
+- name: Set defaults
+  ansible.builtin.set_fact:
+    mit_basic_editor: "{{ mit_basic_editor | default('neovim') }}"
+    packages_to_remove:
+      - apt-listchanges
+      - vim
+      - vim-tiny
+
+- name: Set defaults
+  ansible.builtin.set_fact:
+    packages_to_remove: "{{ packages_to_remove | difference([mit_basic_editor]) }}"
+
 - name: Gather the package facts
   ansible.builtin.package_facts:
     manager: auto
@@ -22,10 +34,7 @@
 - name: Ensure basic packages (remove deprecated)
   ansible.builtin.apt:
     state: absent
-    pkg:
-      - apt-listchanges
-      - vim
-      - vim-tiny
+    pkg: "{{ packages_to_remove }}"
 
 # https://unix.stackexchange.com/a/384977
 - name: Configure timezone

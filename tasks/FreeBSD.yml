@@ -265,6 +265,12 @@
     line: '\1.eli        none            swap    sw              0       0'
   when: swap_in_fstab.stdout != ""
 
+- name: Ensure basic packages
+  ansible.builtin.package:
+    state: absent
+    name:
+      - neovim
+  when: not is_jail
 - name: Ensure basic packages (remove deprecated)
   ansible.builtin.package:
     state: absent
