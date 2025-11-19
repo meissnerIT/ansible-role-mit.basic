@@ -38,7 +38,7 @@
     name: postfix
     state: restarted
 
-- name: Sshd configtest
+- name: Test sshd configuration
   ansible.builtin.command: sshd -t
   changed_when: true
   register: sshd_configtest

@@ -205,26 +205,6 @@
     dest: /etc/tmpfiles.d/
     mode: "644"
 
-# Harden SSH config (#21540)
-- name: Replace sshd host keys
-  ansible.builtin.script:
-  args:
-    cmd: files/sshd-replace-keys.sh '{{ cflag }}'
-    creates: "{{ cflag }}"
-  notify: Restart sshd
-  vars:
-    # Completion flag file
-    cflag: /etc/ssh/.flag.local-host-keys-replaced
-  when: mit_basic_harden_ssh_debian11
-
-- name: Copy hardened sshd config
-  ansible.builtin.copy:
-    src: sshd-Linux-Debian_11/local-hardening.conf
-    dest: /etc/ssh/sshd_config.d/
-    mode: "644"
-  notify: Reload sshd
-  when: mit_basic_harden_ssh_debian11
-
 - name: Install zfs-autobackup
   ansible.builtin.include_tasks: install-zfs-autobackup.yml
   when: zfs_autobackup_enabled is defined and zfs_autobackup_enabled

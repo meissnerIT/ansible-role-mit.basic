@@ -8,6 +8,9 @@
 - name: Set defaults
   ansible.builtin.set_fact:
     mit_basic_editor: "{{ mit_basic_editor | default('neovim') }}"
+    mit_basic_harden_sshd: "{{ mit_basic_harden_sshd | default(false) }}"
+  tags:
+    - harden-sshd
 
 - name: Include ansible_system-ansible_lsb.id.yml ({{ ansible_system }}-{{ ansible_lsb.id | default('') }}.yml) # noqa: name[template]
   ansible.builtin.include_tasks: "{{ tasks_file }}"
@@ -43,6 +46,20 @@
     dest: /etc/resolv.conf
     mode: "644"
   when: mit_basic_resolv_conf is defined
+
+- name: Harden sshd configuration
+  ansible.builtin.include_tasks: "{{ tasks_file }}"
+  args:
+    apply:
+      tags:
+        - harden-sshd
+  tags:
+    - harden-sshd
+  when: mit_basic_harden_sshd and tasks_file != ""
+  vars:
+    tasks_file: "{{ lookup('ansible.builtin.first_found', files, errors='ignore') }}"
+    files:
+      - "setup-harden-sshd-{{ ansible_system }}-{{ ansible_lsb.id | default('') }}.yml"
 
 # Under Debian we install the latest version
 # Under FreeBSD we use the one provided by pkg

@@ -1,0 +1,38 @@
+---
+
+# Harden SSH config (ssh-audit.com, MIT-21554)
+# when: mit_basic_harden_ssh_debian11
+
+- name: Generate rsa host key (ssh_host_rsa_key)
+  ansible.builtin.command: ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -N ""
+  args:
+    creates: /etc/ssh/ssh_host_rsa_key
+
+- name: Generate ed25519 host key (ssh_host_ed25519_key)
+  ansible.builtin.command: ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N ""
+  args:
+    creates: /etc/ssh/ssh_host_ed25519_key
+
+- name: Copy sshd configuration (mit-ssh-audit.conf)
+  ansible.builtin.copy:
+    src: ssh/mit-ssh-audit.conf
+    dest: /etc/ssh/sshd_config.d/
+    mode: "644"
+  notify: Restart sshd
+
+- name: Copy ssh/moduli from ssh-audit.com
+  ansible.builtin.copy:
+    src: ssh/moduli-{{ ansible_lsb.id }}-{{ ansible_distribution_major_version }}-hardened
+    dest: /etc/ssh/moduli
+    mode: "644"
+  notify: Restart sshd
+
+- name: Remove deprecated files
+  ansible.builtin.file:
+    path: "/etc/ssh/{{ item }}"
+    state: absent
+  loop:
+    - ssh_host_ecdsa_key
+    - ssh_host_ecdsa_key.pub
+    - sshd_config.d/local-hardening.conf
+  notify: Test sshd configuration
