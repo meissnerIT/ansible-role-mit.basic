@@ -8,7 +8,7 @@
 - name: Set defaults
   ansible.builtin.set_fact:
     mit_basic_editor: "{{ mit_basic_editor | default('neovim') }}"
-    mit_basic_harden_sshd: "{{ mit_basic_harden_sshd | default(false) }}"
+    mit_basic_harden_sshd: "{{ mit_basic_harden_sshd | default(true) }}"
   tags:
     - harden-sshd
 
