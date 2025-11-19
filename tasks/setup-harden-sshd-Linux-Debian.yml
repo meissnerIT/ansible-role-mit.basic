@@ -15,8 +15,8 @@
 
 - name: Copy sshd configuration (mit-ssh-audit.conf)
   ansible.builtin.copy:
-    src: ssh/mit-ssh-audit.conf
-    dest: /etc/ssh/sshd_config.d/
+    src: ssh/mit-ssh-audit.conf-{{ ansible_lsb.id }}-{{ ansible_distribution_major_version }}
+    dest: /etc/ssh/sshd_config.d/mit-ssh-audit.conf
     mode: "644"
   notify: Restart sshd
 
@@ -32,6 +32,7 @@
     path: "/etc/ssh/{{ item }}"
     state: absent
   loop:
+    - ssh-audit_hardening.conf
     - ssh_host_ecdsa_key
     - ssh_host_ecdsa_key.pub
     - sshd_config.d/local-hardening.conf
