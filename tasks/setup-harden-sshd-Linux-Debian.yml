@@ -7,11 +7,13 @@
   ansible.builtin.command: ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -N ""
   args:
     creates: /etc/ssh/ssh_host_rsa_key
+  notify: Restart sshd
 
 - name: Generate ed25519 host key (ssh_host_ed25519_key)
   ansible.builtin.command: ssh-keygen -t ed25519 -f /etc/ssh/ssh_host_ed25519_key -N ""
   args:
     creates: /etc/ssh/ssh_host_ed25519_key
+  notify: Restart sshd
 
 - name: Copy sshd configuration (mit-ssh-audit.conf)
   ansible.builtin.copy:
