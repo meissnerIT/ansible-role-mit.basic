@@ -11,6 +11,7 @@
     mit_basic_harden_sshd: "{{ mit_basic_harden_sshd | default(true) }}"
   tags:
     - harden-sshd
+    - neovim
 
 - name: Include ansible_system-ansible_lsb.id.yml ({{ ansible_system }}-{{ ansible_lsb.id | default('') }}.yml) # noqa: name[template]
   ansible.builtin.include_tasks: "{{ tasks_file }}"

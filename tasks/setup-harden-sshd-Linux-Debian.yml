@@ -1,7 +1,10 @@
 ---
 
 # Harden SSH config (ssh-audit.com, MIT-21554)
-# when: mit_basic_harden_ssh_debian11
+
+- name: Set mit_basic_sshd_required_rsa_size
+  ansible.builtin.set_fact:
+    mit_basic_sshd_required_rsa_size: "{{ mit_basic_sshd_required_rsa_size | default('3072') }}"
 
 - name: Generate rsa host key (ssh_host_rsa_key)
   ansible.builtin.command: ssh-keygen -t rsa -b 4096 -f /etc/ssh/ssh_host_rsa_key -N ""
@@ -16,7 +19,7 @@
   notify: Restart sshd
 
 - name: Copy sshd configuration (mit-ssh-audit.conf)
-  ansible.builtin.copy:
+  ansible.builtin.template:
     src: ssh/mit-ssh-audit.conf-{{ ansible_lsb.id }}-{{ ansible_distribution_major_version }}
     dest: /etc/ssh/sshd_config.d/mit-ssh-audit.conf
     mode: "644"
