@@ -13,11 +13,6 @@
   ansible.builtin.set_fact:
     packages_to_remove: "{{ packages_to_remove | difference([mit_basic_editor]) }}"
 
-- name: Gather the package facts
-  ansible.builtin.package_facts:
-    manager: auto
-  when: ansible_facts.packages is not defined
-
 # #19984: Automatische Aktualisierung fuer Ubuntu Rechner: cron-apt kann genutzt werden
 - name: Ensure basic packages
   ansible.builtin.apt:
@@ -29,12 +24,19 @@
       - lsb-release
       - patch
       - python3
+      - python3-apt
       - sudo
 
 - name: Ensure basic packages (remove deprecated)
   ansible.builtin.apt:
     state: absent
     pkg: "{{ packages_to_remove }}"
+
+# Requires python3-apt
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: auto
+  when: ansible_facts.packages is not defined
 
 # https://unix.stackexchange.com/a/384977
 - name: Configure timezone
