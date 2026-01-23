@@ -79,7 +79,7 @@
     path: /usr/local/etc/ntpd.conf
     regexp: "^server "
     line: "server {{ ntp_server }}"
-  when: ntp_server is defined
+  when: not is_jail and ntp_server is defined
   notify: Restart openntpd
 
 - name: Remove other ntp servers for OpenNTPD
@@ -87,7 +87,7 @@
     path: /usr/local/etc/ntpd.conf
     regexp: "^servers"
     state: absent
-  when: ntp_server is defined
+  when: not is_jail and ntp_server is defined
   notify: Restart openntpd
 
 # Force to stop ntpd from base
