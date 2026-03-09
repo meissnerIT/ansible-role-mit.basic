@@ -24,6 +24,7 @@
     (ansible_distribution == "Debian" and ansible_distribution_major_version | int >= 12)
     or ansible_distribution == "Ubuntu"
     or ansible_distribution == "Univention Corporate Server"
+    or ansible_distribution == "Linux Mint"
   environment: "{{ proxy_env }}"
 - name: Extract neovim archive
   ansible.builtin.unarchive:

@@ -1,0 +1,9 @@
+# Managed by ansible (mit.basic)
+
+#deb cdrom:[Linux Mint 22.3 _Zena_ - Release amd64 20260108]/ noble contrib main
+
+# This system was installed using small removable media
+# (e.g. netinst, live or single CD). The matching "deb cdrom"
+# entries were disabled at the end of the installation process.
+# For information about how to configure apt package sources,
+# see the sources.list(5) manual.
