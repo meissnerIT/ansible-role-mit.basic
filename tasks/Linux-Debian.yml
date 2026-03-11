@@ -1,5 +1,5 @@
 ---
-# common tasks for all Debian, Raspbian and Ubuntu machines
+# common tasks for all Debian, Raspbian, Ubuntu and Mint machines
 
 - name: Set defaults
   ansible.builtin.set_fact:
@@ -135,6 +135,7 @@
   ansible.builtin.stat:
     path: /etc/aliases
   register: etc_aliases
+  when: alias_root is defined
 
 - name: Set mail alias for root -> {{ alias_root }}
   ansible.builtin.lineinfile:
@@ -143,7 +144,7 @@
     regexp: "^root:"
     line: "root: {{ alias_root }}"
   notify: Newaliases
-  when: etc_aliases.stat.exists
+  when: alias_root is defined and etc_aliases.stat.exists
   tags: mail
 
 - name: Install /etc/cron.daily/local-mit-disk-info
