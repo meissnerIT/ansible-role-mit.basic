@@ -90,6 +90,16 @@
   when: not is_jail and ntp_server is defined
   notify: Restart openntpd
 
+# OpenNTPD cannot use a http proxy for constraints. When all constraints fail
+# the sync will fail, too.
+- name: Remove constraints from OpenNTPD configuration if http_proxy is set
+  ansible.builtin.lineinfile:
+    path: /usr/local/etc/ntpd.conf
+    regexp: "^constraint"
+    state: absent
+  when: proxy_env.http_proxy | length > 0
+  notify: Restart openntpd
+
 # Force to stop ntpd from base
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
