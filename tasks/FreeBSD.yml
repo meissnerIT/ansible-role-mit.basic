@@ -148,7 +148,7 @@
 # https://docs.freebsd.org/en/books/handbook/jails/#jail-upgrading
 # Jails must be updated from the host operating system.
 - name: Fetch all available system updates daily (freebsd-update)
-  ansible.builtin.copy:
+  ansible.builtin.template:
     src: 900.freebsd-update
     dest: /usr/local/etc/periodic/daily/
     mode: "0755"
