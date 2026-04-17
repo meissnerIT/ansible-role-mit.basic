@@ -38,6 +38,11 @@
     name: postfix
     state: restarted
 
+- name: Restart smtpd
+  ansible.builtin.service:
+    name: smtpd
+    state: restarted
+
 - name: Test sshd configuration
   ansible.builtin.command: sshd -t
   changed_when: true

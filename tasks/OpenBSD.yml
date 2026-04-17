@@ -1,4 +1,19 @@
 ---
 # Common tasks for all OpenBSD machines.
 
-# Currently nothing =)
+- name: Set mail alias for root -> {{ alias_root }}
+  ansible.builtin.lineinfile:
+    dest: /etc/mail/aliases
+    create: false
+    regexp: "^root:"
+    line: "root: {{ alias_root }}"
+  notify: Newaliases
+  tags: mail
+
+# OpenSMTPD - please review
+- name: Set relayhost in /etc/mail/smtpd.conf
+  ansible.builtin.lineinfile:
+    path: /etc/mail/smtpd.conf
+    regexp: '^action "outbound" relay'
+    line: 'action "outbound" relay host "{{ smtp_relayhost }}"'
+  notify: Restart smtpd
