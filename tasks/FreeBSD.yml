@@ -49,6 +49,12 @@
     line: autoboot_delay="0"
   when: not is_jail
 
+- name: Copy ssh/moduli.orig
+  ansible.builtin.copy:
+    src: ssh/moduli-FreeBSD-{{ ansible_distribution_version }}
+    dest: /etc/ssh/moduli.orig
+    mode: "644"
+    group: wheel
 - name: Copy ssh/moduli (ssh-audit.com)
   ansible.builtin.copy:
     src: ssh/moduli-FreeBSD-{{ ansible_distribution_version }}-hardened
