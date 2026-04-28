@@ -154,7 +154,7 @@
 # https://docs.freebsd.org/en/books/handbook/jails/#jail-upgrading
 # Jails must be updated from the host operating system.
 - name: Fetch all available system updates daily (freebsd-update)
-  ansible.builtin.copy:
+  ansible.builtin.template:
     src: 900.freebsd-update
     dest: /usr/local/etc/periodic/daily/
     mode: "0755"
@@ -280,6 +280,17 @@
     regexp: ^(\/dev\/[a-z0-9]+)[ \t]+none[ \t]+swap[ \t]+sw[ \t]+0[ \t]+0$
     line: '\1.eli        none            swap    sw              0       0'
   when: swap_in_fstab.stdout != ""
+
+- name: Remove old boot environments (bectl)
+  ansible.builtin.shell: >
+    set -o pipefail &&
+    for bootenv in $(bectl list|awk '/^[0-9\\.]+-RELEASE/ { print $1; }'|tail -r|tail -n +4); do echo $bootenv; sudo bectl destroy $bootenv; done
+  changed_when: bectl_destroy.stdout_lines | length > 0
+  register: bectl_destroy
+- name: Output of removing old boot environments
+  ansible.builtin.debug:
+    var: bectl_destroy.stdout_lines
+  when: bectl_destroy.stdout_lines | length > 0
 
 - name: Ensure basic packages
   ansible.builtin.package:
